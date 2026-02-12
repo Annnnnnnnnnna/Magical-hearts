@@ -22,7 +22,6 @@
       touch-action:none;
     }
 
-    /* FULLSCREEN CANVAS */
     .stage{ position:fixed; inset:0; background:#05050b; }
     canvas{
       position:absolute; inset:0;
@@ -32,7 +31,6 @@
       touch-action:none;
     }
 
-    /* Top hint bar */
     .topbar{
       position:absolute; left:12px; right:12px; top:10px;
       display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -55,7 +53,6 @@
       white-space:nowrap;
     }
 
-    /* Overlay */
     .overlay{
       position:absolute; inset:0;
       display:none; align-items:center; justify-content:center;
@@ -152,8 +149,9 @@
       <div class="panel">
         <h2 id="ovTitle">How to Play</h2>
         <p id="ovText">
-          You have <b>3 timed levels</b>. In each level, collect <b>as many hearts as possible</b> before the timer hits 0.<br><br>
-          <b>Record:</b> the <b>total hearts</b> you collect across all <b>three levels</b>.
+          <b>Level 1:</b> 40 seconds • <b>Level 2:</b> 60 seconds • <b>Level 3:</b> endless.<br><br>
+          Collect as many hearts as possible. Your <b>record</b> is the <b>total hearts</b> collected across all levels
+          (including the endless Level 3 until you lose).
         </p>
 
         <div class="grid">
@@ -166,20 +164,20 @@
           </div>
           <div class="card">
             <b>Goal</b><br>
-            • Each level has a fixed timer<br>
-            • Collect hearts fast (no “required amount”)<br>
+            • Collect as many hearts as possible<br>
             • Avoid dark orbs (lose lives)<br>
-            • After Level 3, your run ends and your total hearts are compared to your record
+            • Bonuses last <b>5 seconds</b> from pickup
           </div>
           <div class="card">
-            <b>Power-ups</b><br>
-            • <b>Shield:</b> blocks orb hits while active<br>
-            • <b>Speed:</b> faster movement for a short time
+            <b>Level 3 (Endless)</b><br>
+            • More dark orbs<br>
+            • Fewer bonuses<br>
+            • Survive to push your record higher
           </div>
           <div class="card">
             <b>Tip</b><br>
-            • Rotate your phone to landscape for more space<br>
-            • Use double-jump to grab high hearts quickly
+            • Use double-jump to grab high hearts quickly<br>
+            • Shield can save you when orbs get dense
           </div>
         </div>
 
@@ -189,7 +187,7 @@
         </div>
 
         <div class="footerline">
-          <span id="bestLine">Best (3 levels): 0 hearts</span>
+          <span id="bestLine">Best: 0 hearts</span>
           <span>Good luck 💖</span>
         </div>
 
@@ -202,13 +200,6 @@
   </div>
 
   <script>
-    /***********************
-     * 3 Timed Levels + Record (Total Hearts across 3 levels)
-     * - No "hearts required" per level
-     * - You just collect as many hearts as possible in the time
-     * - Record = total hearts after Level 3
-     ***********************/
-
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
@@ -220,30 +211,24 @@
     const errBar = document.getElementById("err");
     const bestLine = document.getElementById("bestLine");
 
-    // viewport-sized world (CSS pixels)
     let W = 960, H = 540;
     let dpr = 1;
     let GROUND_Y = 0;
 
-    // Physics (auto tuned per screen)
     let GRAVITY = 2100;
     let MOVE_SPEED = 360;
     let JUMP_V = 900;
 
     function recomputeJumpPhysics(){
       MOVE_SPEED = Math.max(340, Math.floor(W * 0.40));
-
       const usable = (GROUND_Y - 60);
       const targetJumpHeight = Math.max(240, usable * 0.45);
-
       GRAVITY = Math.max(1900, Math.floor(usable * 4.2));
       JUMP_V = Math.sqrt(2 * GRAVITY * targetJumpHeight);
-
       JUMP_V = Math.min(Math.max(JUMP_V, 780), 1400);
       GRAVITY = Math.min(Math.max(GRAVITY, 1600), 3600);
     }
 
-    // Assets (repo root)
     const ASSETS = {
       player: "G.png",
       heart:  "K.png",
@@ -255,21 +240,20 @@
       bg3:    "Y.png",
     };
 
-    // 3 timed levels (a bit longer)
+    // Level 1: 40s, Level 2: 60s, Level 3: endless
+    // Level 3: more orbs, fewer bonuses ✅
     const LEVELS = [
-      { id: 1, bgKey: "bg1", timeLimit: 70, orbRate: 0.85, heartRate: 1.45, bonusRate: 0.20 },
-      { id: 2, bgKey: "bg2", timeLimit: 75, orbRate: 1.05, heartRate: 1.55, bonusRate: 0.20 },
-      { id: 3, bgKey: "bg3", timeLimit: 80, orbRate: 1.20, heartRate: 1.65, bonusRate: 0.22 },
+      { id: 1, bgKey: "bg1", timeLimit: 40, endless:false, orbRate: 0.90, heartRate: 1.55, bonusRate: 0.22, maxOrbs: 12, maxBonuses: 3 },
+      { id: 2, bgKey: "bg2", timeLimit: 60, endless:false, orbRate: 1.10, heartRate: 1.65, bonusRate: 0.20, maxOrbs: 14, maxBonuses: 3 },
+      { id: 3, bgKey: "bg3", timeLimit: Infinity, endless:true,  orbRate: 1.65, heartRate: 1.70, bonusRate: 0.10, maxOrbs: 22, maxBonuses: 2 },
     ];
 
-    // Utils
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const rand = (a,b) => a + Math.random()*(b-a);
     function aabb(ax, ay, aw, ah, bx, by, bw, bh){
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
-    // Asset loading
     function loadImage(src){
       return new Promise((resolve) => {
         const img = new Image();
@@ -294,33 +278,31 @@
       else errBar.classList.remove("show");
     }
 
-    // Game state
     const BEST_KEY = "enchanted_hearts_best_total_hearts";
     const state = {
       mode: "MENU", // MENU, PLAY, END, LOSE
       levelIndex: 0,
-
       timeLeft: LEVELS[0].timeLimit,
 
-      // Hearts counters (THIS is the score now)
       heartsLevel: 0,
       heartsTotal: 0,
       bestTotal: Number(localStorage.getItem(BEST_KEY) || "0"),
 
       lives: 3,
+
+      // Bonuses last exactly 5 seconds ✅
       shieldTime: 0,
       speedTime: 0,
+
       screenShake: 0,
       messageTime: 0,
       messageText: "",
 
-      // soft scaling inside a level (optional)
       levelElapsed: 0,
-      difficulty: 1,  // grows within the level
+      difficulty: 1,
     };
-    bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
+    bestLine.textContent = `Best: ${state.bestTotal} hearts`;
 
-    // Player
     const player = {
       x: 120,
       y: 0,
@@ -357,7 +339,6 @@
     }
     window.addEventListener("resize", resizeCanvas);
 
-    // Entities
     let hearts = [], orbs = [], bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
 
@@ -365,7 +346,6 @@
       return (JUMP_V * JUMP_V) / (2 * GRAVITY);
     }
 
-    // Spawn positions ensure reachability
     function spawnHeart(){
       const size = rand(Math.max(30, H*0.05), Math.max(44, H*0.065));
       const mh = maxJumpHeight();
@@ -378,16 +358,15 @@
       const size = rand(Math.max(36, H*0.06), Math.max(56, H*0.085));
       const fromLeft = Math.random() < 0.5;
 
-      const L = LEVELS[state.levelIndex];
-      const speedMul = state.difficulty; // ramps within the level
-      const base = rand(120, 240) * speedMul;
+      const speedMul = state.difficulty;
+      const base = rand(130, 270) * speedMul;
 
       orbs.push({
         x: fromLeft ? -size : W + size,
         y: rand(90, GROUND_Y - size - 10),
         w: size, h: size,
         vx: fromLeft ? base : -base,
-        vy: rand(-30, 30),
+        vy: rand(-35, 35),
         phase: rand(0, Math.PI*2),
       });
     }
@@ -403,13 +382,12 @@
 
     function resetSpawns(){ hearts=[]; orbs=[]; bonuses=[]; tHeart=0; tOrb=0; tBonus=0; }
 
-    // Overlay helpers
     function showOverlay(title, html){
       ovTitle.textContent = title;
       ovText.innerHTML = html;
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
-      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
+      bestLine.textContent = `Best: ${state.bestTotal} hearts`;
     }
     function hideOverlay(){
       overlay.classList.remove("show");
@@ -419,13 +397,12 @@
       state.messageText = text;
       state.messageTime = seconds;
     }
-
     function saveBestIfNeeded(){
       if (state.heartsTotal > state.bestTotal){
         state.bestTotal = state.heartsTotal;
         localStorage.setItem(BEST_KEY, String(state.bestTotal));
       }
-      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
+      bestLine.textContent = `Best: ${state.bestTotal} hearts`;
     }
 
     function tryJump(){
@@ -445,8 +422,10 @@
       state.heartsTotal = 0;
 
       state.lives = 3;
+
       state.shieldTime = 0;
       state.speedTime = 0;
+
       state.screenShake = 0;
       state.messageTime = 0;
       state.messageText = "";
@@ -465,31 +444,29 @@
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
 
       resetSpawns();
-      for (let i=0;i<7;i++) spawnHeart(); // start with more hearts
+      for (let i=0;i<7;i++) spawnHeart();
 
       hideOverlay();
-      flashMessage("Level 1!", 1.1);
+      flashMessage("Level 1!", 1.0);
     }
 
     function advanceLevel(){
       state.levelIndex++;
 
       if (state.levelIndex >= LEVELS.length){
-        // End of run (3 levels done)
+        // This only happens if we ever add more levels
         state.mode = "END";
         saveBestIfNeeded();
-
         showOverlay(
           "Run Complete! 💖",
-          `You finished all <b>3 levels</b>.<br><br>
+          `You finished all levels.<br><br>
            <b>Total hearts:</b> ${state.heartsTotal}<br>
            <b>Record (best):</b> ${state.bestTotal}<br><br>
-           Tap <b>Start</b> or press <b>Enter</b> to try to beat your record.`
+           Tap <b>Start</b> or press <b>Enter</b> to try again.`
         );
         return;
       }
 
-      // Next level
       state.heartsLevel = 0;
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
 
@@ -516,13 +493,13 @@
       showOverlay(
         "Game Over 🖤",
         `${reason}<br><br>
-         <b>Total hearts (so far):</b> ${state.heartsTotal}<br>
+         <b>Total hearts:</b> ${state.heartsTotal}<br>
          <b>Record (best):</b> ${state.bestTotal}<br><br>
          Tap <b>Start</b> or press <b>Enter</b> to restart.`
       );
     }
 
-    // ===== Input: pointer (move) + arrows + click/tap to jump
+    // Input
     const pointer = { down:false, x:0, y:0 };
     function canvasToGameXY(evt){
       const rect = canvas.getBoundingClientRect();
@@ -532,7 +509,6 @@
       };
     }
 
-    // Click/tap anywhere to jump
     canvas.addEventListener("pointerdown", (e)=>{
       if (state.mode !== "PLAY") return;
       canvas.setPointerCapture(e.pointerId);
@@ -550,7 +526,6 @@
     canvas.addEventListener("pointerup", pointerUp);
     canvas.addEventListener("pointercancel", pointerUp);
 
-    // Keyboard
     const keys = new Set();
     addEventListener("keydown", (e)=>{
       const k = e.key.toLowerCase();
@@ -566,7 +541,7 @@
     }, { passive:false });
     addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
 
-    // ===== Drawing helpers
+    // Drawing
     function roundRect(x, y, w, h, r, fill, stroke) {
       const rr = typeof r === "number" ? {tl:r, tr:r, br:r, bl:r} : r;
       ctx.beginPath();
@@ -623,7 +598,6 @@
 
     function drawSpriteOrFallback(img, x, y, w, h, kind){
       if (img){ ctx.drawImage(img, x, y, w, h); return; }
-
       if (kind === "player"){
         ctx.fillStyle = "rgba(255,255,255,.85)";
         ctx.fillRect(x, y, w, h);
@@ -661,7 +635,7 @@
       ctx.save();
       ctx.globalAlpha = 0.92;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(x, y, 160, 24, 999, true, false);
+      roundRect(x, y, 150, 24, 999, true, false);
       ctx.globalAlpha = 1;
       ctx.fillStyle = "rgba(255,255,255,.9)";
       ctx.font = "800 12px ui-sans-serif, system-ui";
@@ -673,27 +647,27 @@
       ctx.save();
       ctx.globalAlpha = 0.92;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(12, 72, 400, 122, 16, true, false);
+      roundRect(12, 72, 430, 122, 16, true, false);
       ctx.globalAlpha = 1;
 
-      const lvl = LEVELS[state.levelIndex].id;
+      const L = LEVELS[state.levelIndex];
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Level: ${lvl}/3`, 24, 98);
+      ctx.fillText(`Level: ${L.id}/3`, 24, 98);
 
       ctx.font = "700 14px ui-sans-serif, system-ui";
       ctx.fillStyle = "rgba(255,255,255,.85)";
       ctx.fillText(`Hearts (level): ${state.heartsLevel}`, 24, 122);
       ctx.fillText(`Hearts (total): ${state.heartsTotal}`, 24, 144);
-      ctx.fillText(`Best (3 levels): ${state.bestTotal}`, 24, 166);
+      ctx.fillText(`Best: ${state.bestTotal}`, 24, 166);
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 260, 98);
+      ctx.fillText(L.endless ? `Time: ∞` : `Time: ${Math.ceil(state.timeLeft)}s`, 270, 98);
 
       // lives
-      const lx = 260, ly = 112;
+      const lx = 270, ly = 112;
       for (let i=0;i<3;i++){
         const alive = i < state.lives;
         const x = lx + i*28, y = ly;
@@ -714,12 +688,10 @@
         }
       }
 
-      // buffs
-      let bx = 430, by = 78;
-      if (state.shieldTime > 0){ drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
-      if (state.speedTime > 0){  drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime));  }
+      let bx = 460, by = 78;
+      if (state.shieldTime > 0) { drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
+      if (state.speedTime  > 0) { drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime)); }
 
-      // message
       if (state.messageTime > 0){
         ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
         ctx.fillStyle = "rgba(0,0,0,.35)";
@@ -741,31 +713,38 @@
     function update(dt){
       if (state.mode !== "PLAY") return;
 
-      // timer
-      state.timeLeft -= dt;
-      if (state.timeLeft <= 0){
-        state.timeLeft = 0;
-        // time over => next level (not game over)
-        flashMessage("Time! Next level…", 1.0);
-        advanceLevel();
-        return;
+      const L = LEVELS[state.levelIndex];
+
+      // Timer only for non-endless levels ✅
+      if (!L.endless){
+        state.timeLeft -= dt;
+        if (state.timeLeft <= 0){
+          state.timeLeft = 0;
+          flashMessage("Time! Next level…", 0.9);
+          // go to next level
+          state.levelIndex = Math.min(state.levelIndex + 1, LEVELS.length - 1);
+          startLevel(state.levelIndex);
+          return;
+        }
       }
 
-      // ramp difficulty slightly within each level (more orbs later)
+      // Difficulty ramp inside each level (esp. Level 3)
       state.levelElapsed += dt;
-      const step = Math.floor(state.levelElapsed / 20); // every 20 seconds
-      state.difficulty = 1 + step * 0.12;
-      state.difficulty = Math.min(state.difficulty, 2.2);
+      const step = Math.floor(state.levelElapsed / 18); // a bit faster ramp
+      state.difficulty = 1 + step * (L.endless ? 0.16 : 0.10);
+      state.difficulty = Math.min(state.difficulty, L.endless ? 3.0 : 2.0);
 
+      // Buff timers (5 seconds max, set on pickup) ✅
       state.shieldTime = Math.max(0, state.shieldTime - dt);
-      state.speedTime  = Math.max(0, state.speedTime - dt);
+      state.speedTime  = Math.max(0, state.speedTime  - dt);
+
       state.messageTime = Math.max(0, state.messageTime - dt);
       state.screenShake = Math.max(0, state.screenShake - dt*2.4);
       player.stun = Math.max(0, player.stun - dt);
 
       const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
 
-      // Combined controls: pointer hold + arrows override
+      // Movement: pointer hold + arrows override
       let moveDir = 0;
 
       if (pointer.down){
@@ -785,14 +764,12 @@
         else player.vx *= 0.86;
       }
 
-      // integrate
       player.vy += GRAVITY * dt;
       player.x += player.vx * dt;
       player.y += player.vy * dt;
 
       player.x = clamp(player.x, 0, W - player.w);
 
-      // ground + reset jumps
       if (player.y + player.h >= GROUND_Y){
         player.y = GROUND_Y - player.h;
         player.vy = 0;
@@ -802,56 +779,55 @@
         player.onGround = false;
       }
 
-      // Spawn
-      const L = LEVELS[state.levelIndex];
+      // Spawning
       const d = state.difficulty;
 
-      tHeart += dt * (L.heartRate * 1.05);     // keep hearts flowing
-      tOrb   += dt * (L.orbRate   * d);        // orbs increase over time
-      tBonus += dt * (L.bonusRate * 1.0);
+      tHeart += dt * (L.heartRate * 1.05);
+      tOrb   += dt * (L.orbRate   * d);
+      tBonus += dt * (L.bonusRate * (L.endless ? 0.85 : 1.0));
 
-      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 26) spawnHeart(); }
-      while (tOrb   >= 1){ tOrb   -= 1; if (orbs.length < 14) spawnOrb(); }
-      while (tBonus >= 1){ tBonus -= 1; if (bonuses.length < 3) spawnBonus(); }
+      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 28) spawnHeart(); }
+      while (tOrb   >= 1){ tOrb   -= 1; if (orbs.length < L.maxOrbs) spawnOrb(); }
+      while (tBonus >= 1){ tBonus -= 1; if (bonuses.length < L.maxBonuses) spawnBonus(); }
 
-      // animate
       for (const h of hearts) h.bob += dt * 3.2;
       for (const b of bonuses) b.bob += dt * 2.8;
+
       for (const o of orbs){
         o.phase += dt * 2.3;
-        o.y += Math.sin(o.phase) * 20 * dt + o.vy * dt;
+        o.y += Math.sin(o.phase) * 22 * dt + o.vy * dt;
         o.x += o.vx * dt;
         if (o.y < 60) { o.y = 60; o.vy = Math.abs(o.vy); }
         if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
       }
 
-      // collisions: hearts (ONLY COUNT HEARTS, no +10)
+      // hearts
       for (let i=hearts.length-1;i>=0;i--){
         const h = hearts[i];
         if (aabb(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)){
           hearts.splice(i,1);
           state.heartsLevel += 1;
           state.heartsTotal += 1;
-          flashMessage(`+1 Heart!`, 0.45);
+          flashMessage("+1 Heart!", 0.35);
         }
       }
 
-      // collisions: bonuses
+      // bonuses (duration = 5 seconds from pickup) ✅
       for (let i=bonuses.length-1;i>=0;i--){
         const b = bonuses[i];
         if (aabb(player.x, player.y, player.w, player.h, b.x, b.y, b.w, b.h)){
           bonuses.splice(i,1);
           if (b.type === "SHIELD"){
-            state.shieldTime = Math.max(state.shieldTime, 8);
-            flashMessage("Shield activated (8s)!", 1.0);
+            state.shieldTime = 5; // exactly 5 seconds
+            flashMessage("Shield (5s)!", 0.9);
           } else {
-            state.speedTime = Math.max(state.speedTime, 7);
-            flashMessage("Speed boost (7s)!", 1.0);
+            state.speedTime = 5;  // exactly 5 seconds
+            flashMessage("Speed (5s)!", 0.9);
           }
         }
       }
 
-      // collisions: orbs
+      // orbs
       for (let i=orbs.length-1;i>=0;i--){
         const o = orbs[i];
         if (o.x < -220 || o.x > W + 220){ orbs.splice(i,1); continue; }
@@ -859,13 +835,13 @@
         if (aabb(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)){
           if (state.shieldTime > 0){
             orbs.splice(i,1);
-            flashMessage("Shield blocked dark magic!", 0.8);
+            flashMessage("Blocked!", 0.55);
           } else {
             orbs.splice(i,1);
             state.lives -= 1;
             player.stun = 0.7;
             state.screenShake = 0.9;
-            flashMessage("Hit by dark magic! -1 life", 1.0);
+            flashMessage("Hit! -1 life", 0.9);
 
             if (state.lives <= 0){
               state.lives = 0;
@@ -875,10 +851,14 @@
           }
         }
       }
+
+      // live record display (update best after you pass it)
+      if (state.heartsTotal > state.bestTotal){
+        state.bestTotal = state.heartsTotal;
+      }
     }
 
     function draw(){
-      // shake
       let sx = 0, sy = 0;
       if (state.screenShake > 0){
         const m = state.screenShake * 6;
@@ -893,7 +873,6 @@
       drawBg(bg);
       drawGround();
 
-      // hearts
       for (const h of hearts){
         const bobY = Math.sin(h.bob) * 6;
         drawSpriteOrFallback(IMG.heart, h.x, h.y + bobY, h.w, h.h, "heart");
@@ -905,7 +884,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // bonuses
       for (const b of bonuses){
         const bobY = Math.sin(b.bob) * 6;
         drawSpriteOrFallback(IMG.bonus, b.x, b.y + bobY, b.w, b.h, "bonus");
@@ -918,7 +896,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // orbs
       for (const o of orbs){
         drawSpriteOrFallback(IMG.orb, o.x, o.y, o.w, o.h, "orb");
         ctx.globalAlpha = 0.12;
@@ -929,7 +906,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // shield aura
       if (state.shieldTime > 0){
         ctx.globalAlpha = 0.20;
         ctx.beginPath();
@@ -939,13 +915,13 @@
         ctx.globalAlpha = 1;
       }
 
-      // player
       drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
-
       drawHUD();
+
       ctx.restore();
     }
 
+    let last = performance.now();
     function loop(now){
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
@@ -954,16 +930,40 @@
       requestAnimationFrame(loop);
     }
 
+    function startLevel(idx){
+      state.levelIndex = idx;
+      state.heartsLevel = 0;
+
+      const L = LEVELS[idx];
+      state.timeLeft = L.timeLimit;
+
+      state.levelElapsed = 0;
+      state.difficulty = 1;
+
+      // keep buffs running across levels (user asked: "throughout the whole game")
+      // we do NOT reset shieldTime/speedTime here
+
+      resetSpawns();
+      for (let i=0;i<7;i++) spawnHeart();
+
+      player.x = Math.max(40, W * 0.10);
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = true;
+      player.stun = 0;
+      player.jumpsLeft = player.maxJumps;
+    }
+
     // UI buttons
     btnStart.addEventListener("click", () => startOrRestart());
     btnRules.addEventListener("click", () => {
       showOverlay(
         "Quick Rules",
-        `• You have <b>3 timed levels</b><br>
-         • Collect as many hearts as possible before the timer hits 0<br>
-         • Record = <b>total hearts across all 3 levels</b><br>
+        `• Level 1: <b>40s</b>, Level 2: <b>60s</b>, Level 3: <b>Endless</b><br>
+         • Collect as many hearts as possible<br>
          • Avoid dark orbs (lose lives)<br>
-         • Bonuses give Shield or Speed<br><br>
+         • Bonuses last <b>5 seconds</b><br><br>
          Controls:<br>
          • Hold/touch to move, or <span class="kbd">←</span>/<span class="kbd">→</span><br>
          • Click/tap anywhere (or <span class="kbd">Space</span>) to jump<br>
@@ -979,25 +979,46 @@
       await loadAllAssets();
 
       state.bestTotal = Number(localStorage.getItem(BEST_KEY) || "0");
-      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
+      bestLine.textContent = `Best: ${state.bestTotal} hearts`;
 
       requestAnimationFrame((t)=>{ last = t; loop(t); });
 
       showOverlay(
         "How to Play",
-        `You have <b>3 timed levels</b>.<br>
-         In each level, collect <b>as many hearts as possible</b> before time runs out.<br><br>
-         <b>Record:</b> total hearts collected across all 3 levels.<br><br>
+        `<b>Level 1:</b> 40 seconds • <b>Level 2:</b> 60 seconds • <b>Level 3:</b> endless<br><br>
+         Collect as many hearts as possible. Your <b>record</b> is the <b>total hearts</b> you collect across the whole run.<br><br>
          <b>Move:</b> hold/touch or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
          <b>Jump:</b> click/tap anywhere or press <span class="kbd">Space</span><br>
          <b>Double-jump:</b> jump again in the air<br><br>
+         Bonuses last <b>5 seconds</b> after pickup.<br><br>
          Tap <b>Start</b> to begin.`
       );
 
       state.mode = "MENU";
     })();
 
-    // Save best on leave (extra safety)
+    function startOrRestart(){
+      state.mode = "PLAY";
+      state.levelIndex = 0;
+
+      state.heartsLevel = 0;
+      state.heartsTotal = 0;
+
+      state.lives = 3;
+
+      state.shieldTime = 0;
+      state.speedTime = 0;
+
+      state.screenShake = 0;
+      state.messageTime = 0;
+      state.messageText = "";
+
+      startLevel(0);
+      hideOverlay();
+      flashMessage("Level 1!", 1.0);
+    }
+
+    // Save best on leave
     addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden"){
         const currentBest = Number(localStorage.getItem(BEST_KEY) || "0");
