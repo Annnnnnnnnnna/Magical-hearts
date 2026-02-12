@@ -17,61 +17,37 @@
       background:#05050b;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
-      overflow:hidden;            /* FULLSCREEN */
+      overflow:hidden;
       overscroll-behavior:none;
       touch-action:none;
     }
 
     /* FULLSCREEN CANVAS */
-    .stage{
-      position:fixed;
-      inset:0;
-      background:#05050b;
-    }
+    .stage{ position:fixed; inset:0; background:#05050b; }
     canvas{
-      position:absolute;
-      inset:0;
-      width:100vw;
-      height:100vh;
+      position:absolute; inset:0;
+      width:100vw; height:100vh;
       display:block;
       background:#070716;
       touch-action:none;
     }
 
-    /* Top HUD hint bar (tiny) */
+    /* small top hint bar */
     .topbar{
-      position:absolute;
-      left:12px;
-      right:12px;
-      top:10px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      position:absolute; left:12px; right:12px; top:10px;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
       padding:10px 12px;
       border-radius:16px;
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
       border: 1px solid rgba(255,255,255,.10);
       backdrop-filter: blur(10px);
-      pointer-events:none; /* lets touches go to canvas */
+      pointer-events:none;
       opacity:.95;
     }
-    .title{
-      font-weight:800;
-      letter-spacing:.2px;
-      font-size:14px;
-      display:flex; align-items:center; gap:8px;
-    }
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.25;
-      text-align:right;
-    }
+    .title{ font-weight:800; letter-spacing:.2px; font-size:14px; display:flex; align-items:center; gap:8px; }
+    .hint{ font-size:12px; color:var(--muted); line-height:1.25; text-align:right; }
     .kbd{
-      display:inline-block;
-      padding:2px 8px;
-      border-radius:999px;
+      display:inline-block; padding:2px 8px; border-radius:999px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.08);
       color: var(--text);
@@ -82,9 +58,7 @@
     /* Overlay */
     .overlay{
       position:absolute; inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
+      display:none; align-items:center; justify-content:center;
       padding:16px;
       background:
         radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
@@ -169,7 +143,7 @@
     <div class="topbar">
       <div class="title">🔮💖 Enchanted Hearts</div>
       <div class="hint">
-        Hold to move • Tap upper half to jump • Double-jump enabled • Restart: <span class="kbd">Enter</span>
+        Move: hold/touch or <span class="kbd">←</span><span class="kbd">→</span> • Jump: click/tap or <span class="kbd">Space</span> • Double-jump
       </div>
     </div>
 
@@ -177,17 +151,18 @@
       <div class="panel">
         <h2 id="ovTitle">How to Play</h2>
         <p id="ovText">
-          Welcome! This game is <b>fullscreen</b> and made for <b>phones</b>.<br><br>
+          Welcome! This game is <b>fullscreen</b> and <b>mobile-friendly</b>.<br><br>
           <b>Goal:</b> collect the required number of hearts before time runs out.
           Avoid dark orbs, and grab bonuses for temporary power-ups.
         </p>
 
         <div class="grid">
           <div class="card">
-            <b>Controls (Mouse/Touch)</b><br>
-            • <b>Hold</b> anywhere to move toward your finger/cursor<br>
-            • <b>Tap in the upper half</b> to jump<br>
-            • You can <b>double-jump</b> to reach any heart
+            <b>Controls</b><br>
+            • <b>Mouse/Touch:</b> hold to move toward your finger/cursor<br>
+            • <b>Keyboard:</b> <span class="kbd">←</span>/<span class="kbd">→</span> to move<br>
+            • <b>Jump:</b> click/tap anywhere or press <span class="kbd">Space</span><br>
+            • <b>Double-jump:</b> jump again in the air to reach higher hearts
           </div>
           <div class="card">
             <b>Scoring</b><br>
@@ -197,15 +172,15 @@
             • Level clear: time bonus
           </div>
           <div class="card">
-            <b>Items</b><br>
-            • Heart: <span class="kbd">K.png</span><br>
-            • Dark orb: <span class="kbd">N.png</span><br>
-            • Bonus: <span class="kbd">U.png</span>
+            <b>Tips</b><br>
+            • Rotate your phone to landscape for more space<br>
+            • Bonuses can save you in later levels<br>
+            • Stay moving to avoid orbs
           </div>
           <div class="card">
-            <b>Files (Repo Root)</b><br>
-            Put these next to <span class="kbd">index.html</span>:<br>
-            <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
+            <b>Power-ups</b><br>
+            • <b>Shield:</b> blocks one dark orb hit while active<br>
+            • <b>Speed:</b> faster movement for a short time
           </div>
         </div>
 
@@ -216,7 +191,7 @@
 
         <div class="footerline">
           <span id="bestLine">Best: 0</span>
-          <span>Tip: Rotate your phone to landscape for more space.</span>
+          <span>Restart anytime: <span class="kbd">Enter</span></span>
         </div>
 
         <div id="err" class="errorbar">
@@ -228,12 +203,6 @@
   </div>
 
   <script>
-    /***********************
-     * FULLSCREEN + MOBILE + MOUSE/TOUCH CONTROLS
-     * NO assets folder. Files in repo root:
-     * index.html + G.png K.png N.png U.png P.png F.png Y.png E.png
-     ***********************/
-
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
@@ -245,128 +214,30 @@
     const errBar = document.getElementById("err");
     const bestLine = document.getElementById("bestLine");
 
-    // Game size in CSS pixels (we set logical coords == viewport pixels)
     let W = 960, H = 540;
     let dpr = 1;
     let GROUND_Y = 0;
 
-    function resizeCanvas(){
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cssW = Math.floor(window.innerWidth);
-      const cssH = Math.floor(window.innerHeight);
-
-      W = cssW;
-      H = cssH;
-
-      canvas.width  = Math.floor(cssW * dpr);
-      canvas.height = Math.floor(cssH * dpr);
-
-      // Scale drawing back to CSS pixels
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // Ground adapts to screen
-      const groundThickness = Math.max(78, Math.floor(H * 0.14));
-      GROUND_Y = H - groundThickness;
-
-      // Player scales with screen so it looks good on phone
-      player.h = Math.max(92, Math.floor(H * 0.18));
-      player.w = Math.max(70, Math.floor(player.h * 0.80));
-
-      // Keep player on ground after resize
-      player.y = Math.min(player.y, GROUND_Y - player.h);
-      if (player.y < 0) player.y = GROUND_Y - player.h;
-      player.x = Math.min(player.x, W - player.w);
-
-      // Recompute jump strength to always reach hearts
-      recomputeJumpPhysics();
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-
-    // Physics (will be tuned by recomputeJumpPhysics)
+    // Physics (auto tuned)
     let GRAVITY = 2100;
-    let MOVE_SPEED = 0;
-    let JUMP_V = 0;
+    let MOVE_SPEED = 360;
+    let JUMP_V = 900;
 
     function recomputeJumpPhysics(){
-      // Movement speed relative to screen width
       MOVE_SPEED = Math.max(340, Math.floor(W * 0.40));
 
-      // Make jump powerful enough to reach any heart:
-      // choose maxJumpHeight ~ 45% of usable height
       const usable = (GROUND_Y - 60);
       const targetJumpHeight = Math.max(240, usable * 0.45);
 
-      // pick gravity based on height for a nice feel (not too floaty)
       GRAVITY = Math.max(1900, Math.floor(usable * 4.2));
-
-      // JUMP_V derived from height: h = v^2 / (2g) => v = sqrt(2gh)
       JUMP_V = Math.sqrt(2 * GRAVITY * targetJumpHeight);
 
-      // cap extremes (safety)
       JUMP_V = Math.min(Math.max(JUMP_V, 780), 1400);
       GRAVITY = Math.min(Math.max(GRAVITY, 1600), 3600);
     }
 
-    // Assets (ROOT)
-    const ASSETS = {
-      player: "G.png",
-      heart:  "K.png",
-      orb:    "N.png",
-      bonus:  "U.png",
-      ui:     "E.png",
-      bg1:    "P.png",
-      bg2:    "F.png",
-      bg3:    "Y.png",
-    };
-
-    const LEVELS = [
-      { id: 1, bgKey: "bg1", heartsToWin: 10, timeLimit: 45, orbRate: 0.9,  heartRate: 1.35, bonusRate: 0.18 },
-      { id: 2, bgKey: "bg2", heartsToWin: 12, timeLimit: 45, orbRate: 1.15, heartRate: 1.45, bonusRate: 0.20 },
-      { id: 3, bgKey: "bg3", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
-    ];
-
-    // Utils
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const rand = (a,b) => a + Math.random()*(b-a);
-    function aabb(ax, ay, aw, ah, bx, by, bw, bh){
-      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-    }
-
-    // Assets loading
-    function loadImage(src){
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ ok:true, img, src });
-        img.onerror = () => resolve({ ok:false, img:null, src });
-        img.src = src;
-      });
-    }
-    const IMG = { player:null, heart:null, orb:null, bonus:null, ui:null, bg1:null, bg2:null, bg3:null };
-
-    async function loadAllAssets(){
-      const entries = Object.entries(ASSETS);
-      const results = await Promise.all(entries.map(([_, src]) => loadImage(src)));
-      let failed = 0;
-
-      for (let i=0;i<entries.length;i++){
-        const key = entries[i][0];
-        const r = results[i];
-        if (!r.ok){
-          failed++;
-          console.warn("FAILED to load:", key, r.src);
-          IMG[key] = null;
-        } else {
-          IMG[key] = r.img;
-        }
-      }
-      if (failed > 0) errBar.classList.add("show");
-      else errBar.classList.remove("show");
-    }
-
-    // State
     const state = {
-      mode: "MENU", // MENU, PLAY, WIN, LOSE
+      mode: "MENU",
       levelIndex: 0,
       timeLeft: 45,
       score: 0,
@@ -381,7 +252,6 @@
     };
     bestLine.textContent = `Best: ${state.best}`;
 
-    // Player (size set on resize)
     const player = {
       x: 120,
       y: 0,
@@ -391,241 +261,74 @@
       vy: 0,
       onGround: true,
       stun: 0,
-      jumpsLeft: 2,          // DOUBLE JUMP ✅
+      jumpsLeft: 2,
       maxJumps: 2,
     };
 
+    function resizeCanvas(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = Math.floor(window.innerWidth);
+      H = Math.floor(window.innerHeight);
+
+      canvas.width  = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const groundThickness = Math.max(78, Math.floor(H * 0.14));
+      GROUND_Y = H - groundThickness;
+
+      player.h = Math.max(92, Math.floor(H * 0.18));
+      player.w = Math.max(70, Math.floor(player.h * 0.80));
+
+      player.y = Math.min(player.y, GROUND_Y - player.h);
+      if (player.y < 0) player.y = GROUND_Y - player.h;
+      player.x = Math.min(player.x, W - player.w);
+
+      recomputeJumpPhysics();
+    }
+    window.addEventListener("resize", resizeCanvas);
+
+    // Assets (repo root)
+    const ASSETS = { player:"G.png", heart:"K.png", orb:"N.png", bonus:"U.png", ui:"E.png", bg1:"P.png", bg2:"F.png", bg3:"Y.png" };
+    const LEVELS = [
+      { id: 1, bgKey: "bg1", heartsToWin: 10, timeLimit: 45, orbRate: 0.9,  heartRate: 1.35, bonusRate: 0.18 },
+      { id: 2, bgKey: "bg2", heartsToWin: 12, timeLimit: 45, orbRate: 1.15, heartRate: 1.45, bonusRate: 0.20 },
+      { id: 3, bgKey: "bg3", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
+    ];
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rand = (a,b) => a + Math.random()*(b-a);
+    function aabb(ax, ay, aw, ah, bx, by, bw, bh){
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function loadImage(src){
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ ok:true, img, src });
+        img.onerror = () => resolve({ ok:false, img:null, src });
+        img.src = src;
+      });
+    }
+    const IMG = { player:null, heart:null, orb:null, bonus:null, ui:null, bg1:null, bg2:null, bg3:null };
+
+    async function loadAllAssets(){
+      const entries = Object.entries(ASSETS);
+      const results = await Promise.all(entries.map(([_, src]) => loadImage(src)));
+      let failed = 0;
+      for (let i=0;i<entries.length;i++){
+        const key = entries[i][0];
+        const r = results[i];
+        if (!r.ok){ failed++; console.warn("FAILED:", key, r.src); IMG[key]=null; }
+        else IMG[key] = r.img;
+      }
+      if (failed > 0) errBar.classList.add("show");
+      else errBar.classList.remove("show");
+    }
+
     // Entities
-    let hearts = [];
-    let orbs = [];
-    let bonuses = [];
+    let hearts = [], orbs = [], bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
-
-    // Pointer controls
-    const pointer = { down:false, x:0, y:0 };
-
-    function canvasToGameXY(evt){
-      const rect = canvas.getBoundingClientRect();
-      const x = (evt.clientX - rect.left) * (W / rect.width);
-      const y = (evt.clientY - rect.top)  * (H / rect.height);
-      return { x, y };
-    }
-
-    function tryJump(){
-      if (player.stun > 0) return;
-      if (player.jumpsLeft <= 0) return;
-      player.vy = -JUMP_V;
-      player.onGround = false;
-      player.jumpsLeft -= 1;
-    }
-
-    canvas.addEventListener("pointerdown", (e)=>{
-      if (state.mode !== "PLAY") return;
-      canvas.setPointerCapture(e.pointerId);
-      pointer.down = true;
-      const p = canvasToGameXY(e);
-      pointer.x = p.x; pointer.y = p.y;
-
-      // Tap/click upper half => jump
-      if (p.y < H * 0.55) tryJump();
-    });
-    canvas.addEventListener("pointermove", (e)=>{
-      if (!pointer.down) return;
-      const p = canvasToGameXY(e);
-      pointer.x = p.x; pointer.y = p.y;
-    });
-    function pointerUp(){ pointer.down = false; }
-    canvas.addEventListener("pointerup", pointerUp);
-    canvas.addEventListener("pointercancel", pointerUp);
-
-    // Keyboard restart only (optional)
-    addEventListener("keydown", (e)=>{
-      if (e.key.toLowerCase() === "enter" && state.mode !== "PLAY") startOrRestart();
-    });
-
-    // Drawing helpers
-    function roundRect(x, y, w, h, r, fill, stroke) {
-      const rr = typeof r === "number" ? {tl:r, tr:r, br:r, bl:r} : r;
-      ctx.beginPath();
-      ctx.moveTo(x + rr.tl, y);
-      ctx.lineTo(x + w - rr.tr, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + rr.tr);
-      ctx.lineTo(x + w, y + h - rr.br);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - rr.br, y + h);
-      ctx.lineTo(x + rr.bl, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - rr.bl);
-      ctx.lineTo(x, y + rr.tl);
-      ctx.quadraticCurveTo(x, y, x + rr.tl, y);
-      ctx.closePath();
-      if (fill) ctx.fill();
-      if (stroke) ctx.stroke();
-    }
-
-    function drawBg(img){
-      if (img){
-        const iw = img.width, ih = img.height;
-        const scale = Math.max(W/iw, H/ih);
-        const dw = iw*scale, dh = ih*scale;
-        const dx = (W - dw)/2;
-        const dy = (H - dh)/2;
-        ctx.drawImage(img, dx, dy, dw, dh);
-      } else {
-        const g = ctx.createLinearGradient(0,0,W,H);
-        g.addColorStop(0, "#140a22");
-        g.addColorStop(1, "#08121f");
-        ctx.fillStyle = g;
-        ctx.fillRect(0,0,W,H);
-        ctx.globalAlpha = 0.35;
-        for (let i=0;i<110;i++){
-          ctx.fillStyle = "white";
-          ctx.fillRect((i*97)%W, (i*43)%H, 2, 2);
-        }
-        ctx.globalAlpha = 1;
-      }
-      // soft vignette
-      ctx.globalAlpha = 0.20;
-      ctx.fillStyle = "black";
-      ctx.fillRect(0,0,W,H);
-      ctx.globalAlpha = 1;
-    }
-
-    function drawGround(){
-      ctx.fillStyle = "rgba(0,0,0,.40)";
-      ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
-      ctx.strokeStyle = "rgba(255,255,255,.12)";
-      ctx.beginPath();
-      ctx.moveTo(0, GROUND_Y+0.5);
-      ctx.lineTo(W, GROUND_Y+0.5);
-      ctx.stroke();
-    }
-
-    function drawSpriteOrFallback(img, x, y, w, h, kind){
-      if (img){
-        ctx.drawImage(img, x, y, w, h);
-        return;
-      }
-      // fallback shapes
-      if (kind === "player"){
-        ctx.fillStyle = "rgba(255,255,255,.85)";
-        ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = "rgba(255,95,162,.9)";
-        ctx.fillRect(x+Math.floor(w*0.16), y+Math.floor(h*0.12), Math.floor(w*0.68), Math.max(10, Math.floor(h*0.12)));
-      } else if (kind === "heart"){
-        ctx.fillStyle = "rgba(255,95,162,.9)";
-        ctx.beginPath();
-        const cx = x+w/2, cy=y+h/2;
-        ctx.arc(cx-w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
-        ctx.arc(cx+w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
-        ctx.lineTo(cx, cy+h*0.30);
-        ctx.closePath();
-        ctx.fill();
-      } else if (kind === "orb"){
-        ctx.fillStyle = "rgba(139,92,246,.9)";
-        ctx.beginPath();
-        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = "black";
-        ctx.beginPath();
-        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/3, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else if (kind === "bonus"){
-        ctx.fillStyle = "rgba(52,211,153,.9)";
-        ctx.beginPath();
-        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
-        ctx.fill();
-      }
-    }
-
-    function drawHUD(){
-      // compact HUD for fullscreen
-      ctx.save();
-      ctx.globalAlpha = 0.92;
-      ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(12, 72, 330, 92, 16, true, false);
-      ctx.globalAlpha = 1;
-
-      const lvl = LEVELS[state.levelIndex].id;
-
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Level: ${lvl}`, 24, 98);
-
-      ctx.font = "700 14px ui-sans-serif, system-ui";
-      ctx.fillStyle = "rgba(255,255,255,.85)";
-      ctx.fillText(`Score: ${state.score}`, 24, 120);
-      ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 24, 142);
-
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 210, 98);
-
-      // Lives icons
-      const lx = 210, ly = 112;
-      for (let i=0;i<3;i++){
-        const alive = i < state.lives;
-        const x = lx + i*28, y = ly;
-        if (IMG.ui){
-          ctx.globalAlpha = alive ? 1 : 0.25;
-          ctx.drawImage(IMG.ui, x, y, 22, 22);
-          ctx.globalAlpha = 1;
-        } else {
-          ctx.globalAlpha = alive ? 1 : 0.25;
-          ctx.fillStyle = "rgba(255,95,162,.95)";
-          ctx.beginPath();
-          ctx.arc(x+7, y+9, 6, 0, Math.PI*2);
-          ctx.arc(x+15, y+9, 6, 0, Math.PI*2);
-          ctx.lineTo(x+11, y+20);
-          ctx.closePath();
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-      }
-
-      // Buff pills
-      let bx = 360, by = 78;
-      if (state.shieldTime > 0){
-        drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime));
-        by += 30;
-      }
-      if (state.speedTime > 0){
-        drawBuffPill(bx, by, "Speed", Math.ceil(state.speedTime));
-      }
-
-      // Message
-      if (state.messageTime > 0){
-        ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
-        ctx.fillStyle = "rgba(0,0,0,.35)";
-        roundRect(W/2 - 200, 72, 400, 40, 14, true, false);
-        ctx.fillStyle = "rgba(255,255,255,.92)";
-        ctx.font = "800 14px ui-sans-serif, system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText(state.messageText, W/2, 98);
-        ctx.textAlign = "left";
-        ctx.globalAlpha = 1;
-      }
-
-      ctx.restore();
-    }
-
-    function drawBuffPill(x,y,label,seconds){
-      ctx.save();
-      ctx.globalAlpha = 0.92;
-      ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(x, y, 160, 24, 999, true, false);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "rgba(255,255,255,.9)";
-      ctx.font = "800 12px ui-sans-serif, system-ui";
-      ctx.fillText(`${label}: ${seconds}s`, x+10, y+16);
-      ctx.restore();
-    }
-
-    // Spawning (ensure hearts always reachable even without perfect timing)
-    function resetSpawns(){
-      hearts = []; orbs = []; bonuses = [];
-      tHeart = 0; tOrb = 0; tBonus = 0;
-    }
 
     function maxJumpHeight(){
       return (JUMP_V * JUMP_V) / (2 * GRAVITY);
@@ -634,17 +337,9 @@
     function spawnHeart(){
       const size = rand(Math.max(30, H*0.05), Math.max(44, H*0.065));
       const mh = maxJumpHeight();
-
-      // Keep hearts within reachable height; double jump makes it even easier
-      const topLimit = Math.max(60, GROUND_Y - mh * 0.95);     // highest (small y)
+      const topLimit = Math.max(60, GROUND_Y - mh * 0.95);
       const bottomLimit = Math.max(120, GROUND_Y - player.h - 40);
-
-      hearts.push({
-        x: rand(60, W-60),
-        y: rand(topLimit, bottomLimit),
-        w: size, h: size,
-        bob: rand(0, Math.PI*2),
-      });
+      hearts.push({ x: rand(60, W-60), y: rand(topLimit, bottomLimit), w:size, h:size, bob: rand(0, Math.PI*2) });
     }
 
     function spawnOrb(){
@@ -666,17 +361,12 @@
       const mh = maxJumpHeight();
       const topLimit = Math.max(70, GROUND_Y - mh * 0.85);
       const bottomLimit = Math.max(130, GROUND_Y - player.h - 50);
-
-      bonuses.push({
-        x: rand(70, W-70),
-        y: rand(topLimit, bottomLimit),
-        w: size, h: size,
-        type,
-        bob: rand(0, Math.PI*2),
-      });
+      bonuses.push({ x: rand(70, W-70), y: rand(topLimit, bottomLimit), w:size, h:size, type, bob: rand(0, Math.PI*2) });
     }
 
-    // Flow
+    function resetSpawns(){ hearts=[]; orbs=[]; bonuses=[]; tHeart=0; tOrb=0; tBonus=0; }
+
+    // Overlay helpers
     function showOverlay(title, html){
       ovTitle.textContent = title;
       ovText.innerHTML = html;
@@ -722,8 +412,8 @@
 
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
       resetSpawns();
-
       for (let i=0;i<4;i++) spawnHeart();
+
       hideOverlay();
     }
 
@@ -771,6 +461,218 @@
       );
     }
 
+    // ===== Input (mouse/touch + arrows)
+    const pointer = { down:false, x:0, y:0 };
+    function canvasToGameXY(evt){
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (evt.clientX - rect.left) * (W / rect.width),
+        y: (evt.clientY - rect.top)  * (H / rect.height),
+      };
+    }
+
+    function tryJump(){
+      if (state.mode !== "PLAY") return;
+      if (player.stun > 0) return;
+      if (player.jumpsLeft <= 0) return;
+      player.vy = -JUMP_V;
+      player.onGround = false;
+      player.jumpsLeft -= 1;
+    }
+
+    // Jump on ANY click/tap anywhere ✅
+    canvas.addEventListener("pointerdown", (e)=>{
+      if (state.mode !== "PLAY") return;
+      canvas.setPointerCapture(e.pointerId);
+      pointer.down = true;
+      const p = canvasToGameXY(e);
+      pointer.x = p.x; pointer.y = p.y;
+      tryJump();
+    });
+    canvas.addEventListener("pointermove", (e)=>{
+      if (!pointer.down) return;
+      const p = canvasToGameXY(e);
+      pointer.x = p.x; pointer.y = p.y;
+    });
+    function pointerUp(){ pointer.down = false; }
+    canvas.addEventListener("pointerup", pointerUp);
+    canvas.addEventListener("pointercancel", pointerUp);
+
+    // Keyboard movement + jump + restart
+    const keys = new Set();
+    addEventListener("keydown", (e)=>{
+      const k = e.key.toLowerCase();
+      keys.add(k);
+      if (k === "enter" && state.mode !== "PLAY") startOrRestart();
+      if (k === " " || k === "arrowup" || k === "w") { e.preventDefault(); tryJump(); }
+      if (["arrowleft","arrowright"].includes(k)) e.preventDefault();
+    }, { passive:false });
+    addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
+
+    // Drawing
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      const rr = typeof r === "number" ? {tl:r, tr:r, br:r, bl:r} : r;
+      ctx.beginPath();
+      ctx.moveTo(x + rr.tl, y);
+      ctx.lineTo(x + w - rr.tr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr.tr);
+      ctx.lineTo(x + w, y + h - rr.br);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr.br, y + h);
+      ctx.lineTo(x + rr.bl, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr.bl);
+      ctx.lineTo(x, y + rr.tl);
+      ctx.quadraticCurveTo(x, y, x + rr.tl, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function drawBg(img){
+      if (img){
+        const iw = img.width, ih = img.height;
+        const scale = Math.max(W/iw, H/ih);
+        const dw = iw*scale, dh = ih*scale;
+        const dx = (W - dw)/2;
+        const dy = (H - dh)/2;
+        ctx.drawImage(img, dx, dy, dw, dh);
+      } else {
+        const g = ctx.createLinearGradient(0,0,W,H);
+        g.addColorStop(0, "#140a22");
+        g.addColorStop(1, "#08121f");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,W,H);
+        ctx.globalAlpha = 0.35;
+        for (let i=0;i<110;i++){
+          ctx.fillStyle = "white";
+          ctx.fillRect((i*97)%W, (i*43)%H, 2, 2);
+        }
+        ctx.globalAlpha = 1;
+      }
+      ctx.globalAlpha = 0.20;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawGround(){
+      ctx.fillStyle = "rgba(0,0,0,.40)";
+      ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y+0.5);
+      ctx.lineTo(W, GROUND_Y+0.5);
+      ctx.stroke();
+    }
+
+    function drawSpriteOrFallback(img, x, y, w, h, kind){
+      if (img){ ctx.drawImage(img, x, y, w, h); return; }
+      if (kind === "player"){
+        ctx.fillStyle = "rgba(255,255,255,.85)";
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = "rgba(255,95,162,.9)";
+        ctx.fillRect(x+Math.floor(w*0.16), y+Math.floor(h*0.12), Math.floor(w*0.68), Math.max(10, Math.floor(h*0.12)));
+      } else if (kind === "heart"){
+        ctx.fillStyle = "rgba(255,95,162,.9)";
+        ctx.beginPath();
+        const cx = x+w/2, cy=y+h/2;
+        ctx.arc(cx-w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
+        ctx.arc(cx+w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
+        ctx.lineTo(cx, cy+h*0.30);
+        ctx.closePath();
+        ctx.fill();
+      } else if (kind === "orb"){
+        ctx.fillStyle = "rgba(139,92,246,.9)";
+        ctx.beginPath();
+        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (kind === "bonus"){
+        ctx.fillStyle = "rgba(52,211,153,.9)";
+        ctx.beginPath();
+        ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    function drawBuffPill(x,y,label,seconds){
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      roundRect(x, y, 160, 24, 999, true, false);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "800 12px ui-sans-serif, system-ui";
+      ctx.fillText(`${label}: ${seconds}s`, x+10, y+16);
+      ctx.restore();
+    }
+
+    function drawHUD(){
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      roundRect(12, 72, 330, 92, 16, true, false);
+      ctx.globalAlpha = 1;
+
+      const lvl = LEVELS[state.levelIndex].id;
+
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "800 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Level: ${lvl}`, 24, 98);
+
+      ctx.font = "700 14px ui-sans-serif, system-ui";
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.fillText(`Score: ${state.score}`, 24, 120);
+      ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 24, 142);
+
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "800 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 210, 98);
+
+      const lx = 210, ly = 112;
+      for (let i=0;i<3;i++){
+        const alive = i < state.lives;
+        const x = lx + i*28, y = ly;
+        if (IMG.ui){
+          ctx.globalAlpha = alive ? 1 : 0.25;
+          ctx.drawImage(IMG.ui, x, y, 22, 22);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.globalAlpha = alive ? 1 : 0.25;
+          ctx.fillStyle = "rgba(255,95,162,.95)";
+          ctx.beginPath();
+          ctx.arc(x+7, y+9, 6, 0, Math.PI*2);
+          ctx.arc(x+15, y+9, 6, 0, Math.PI*2);
+          ctx.lineTo(x+11, y+20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      let bx = 360, by = 78;
+      if (state.shieldTime > 0){ drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
+      if (state.speedTime > 0){  drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime));  }
+
+      if (state.messageTime > 0){
+        ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
+        ctx.fillStyle = "rgba(0,0,0,.35)";
+        roundRect(W/2 - 200, 72, 400, 40, 14, true, false);
+        ctx.fillStyle = "rgba(255,255,255,.92)";
+        ctx.font = "800 14px ui-sans-serif, system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(state.messageText, W/2, 98);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.restore();
+    }
+
     // Update / draw
     let last = performance.now();
 
@@ -792,12 +694,20 @@
 
       const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
 
-      // Hold to move toward pointer
+      // Combine controls:
+      // - If pointer is held: move toward pointer
+      // - Also allow arrows to move (they can override)
       let moveDir = 0;
+
       if (pointer.down){
         const dx = pointer.x - (player.x + player.w/2);
         if (Math.abs(dx) > 10) moveDir = dx > 0 ? 1 : -1;
       }
+
+      const leftK  = keys.has("arrowleft") || keys.has("a");
+      const rightK = keys.has("arrowright") || keys.has("d");
+      if (leftK && !rightK) moveDir = -1;
+      if (rightK && !leftK) moveDir = 1;
 
       if (player.stun > 0){
         player.vx *= 0.92;
@@ -806,26 +716,21 @@
         else player.vx *= 0.86;
       }
 
-      // Physics integrate
       player.vy += GRAVITY * dt;
       player.x += player.vx * dt;
       player.y += player.vy * dt;
 
       player.x = clamp(player.x, 0, W - player.w);
 
-      // Ground collision + reset jumps
       if (player.y + player.h >= GROUND_Y){
         player.y = GROUND_Y - player.h;
         player.vy = 0;
-        if (!player.onGround){
-          player.jumpsLeft = player.maxJumps;   // reset jumps on landing ✅
-        }
+        if (!player.onGround) player.jumpsLeft = player.maxJumps;
         player.onGround = true;
       } else {
         player.onGround = false;
       }
 
-      // Spawning
       const L = LEVELS[state.levelIndex];
       tHeart += dt * L.heartRate;
       tOrb   += dt * L.orbRate;
@@ -842,7 +747,6 @@
         o.phase += dt * 2.3;
         o.y += Math.sin(o.phase) * 20 * dt + o.vy * dt;
         o.x += o.vx * dt;
-
         if (o.y < 60) { o.y = 60; o.vy = Math.abs(o.vy); }
         if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
       }
@@ -911,7 +815,6 @@
     }
 
     function draw(){
-      // shake
       let sx = 0, sy = 0;
       if (state.screenShake > 0){
         const m = state.screenShake * 6;
@@ -926,7 +829,6 @@
       drawBg(bg);
       drawGround();
 
-      // hearts
       for (const h of hearts){
         const bobY = Math.sin(h.bob) * 6;
         drawSpriteOrFallback(IMG.heart, h.x, h.y + bobY, h.w, h.h, "heart");
@@ -938,11 +840,9 @@
         ctx.globalAlpha = 1;
       }
 
-      // bonuses
       for (const b of bonuses){
         const bobY = Math.sin(b.bob) * 6;
         drawSpriteOrFallback(IMG.bonus, b.x, b.y + bobY, b.w, b.h, "bonus");
-
         ctx.globalAlpha = 0.32;
         ctx.strokeStyle = (b.type === "SHIELD") ? "rgba(52,211,153,1)" : "rgba(255,95,162,1)";
         ctx.lineWidth = 3;
@@ -952,7 +852,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // orbs
       for (const o of orbs){
         drawSpriteOrFallback(IMG.orb, o.x, o.y, o.w, o.h, "orb");
         ctx.globalAlpha = 0.12;
@@ -963,7 +862,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // shield aura
       if (state.shieldTime > 0){
         ctx.globalAlpha = 0.20;
         ctx.beginPath();
@@ -973,7 +871,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // player
       drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
 
       drawHUD();
@@ -993,12 +890,13 @@
     btnRules.addEventListener("click", () => {
       showOverlay(
         "Quick Rules",
-        `• Hold to move toward your finger/cursor<br>
-         • Tap the upper half to jump<br>
-         • You have <b>double-jump</b> (2 jumps before landing)<br>
-         • Collect hearts to clear each level<br>
-         • Avoid dark orbs (lose lives)<br><br>
-         Tap <b>Start</b> to play.`
+        `• Collect enough hearts before the timer hits 0<br>
+         • Avoid dark orbs (you lose lives)<br>
+         • Bonuses give Shield or Speed<br><br>
+         Controls:<br>
+         • Hold/touch to move, or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
+         • Click/tap anywhere (or <span class="kbd">Space</span>) to jump<br>
+         • Double-jump is enabled`
       );
     });
 
@@ -1009,7 +907,6 @@
 
       await loadAllAssets();
 
-      // best score
       state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
       bestLine.textContent = `Best: ${state.best}`;
 
@@ -1018,12 +915,13 @@
       showOverlay(
         "How to Play",
         `This game is <b>fullscreen</b> and <b>mobile-friendly</b> ✅<br><br>
-         <b>1) Move:</b> <b>Hold</b> your finger/mouse anywhere and the wizard moves toward it.<br>
-         <b>2) Jump:</b> <b>Tap/click in the upper half</b> of the screen to jump.<br>
-         <b>3) Double-jump:</b> tap again in the air to reach higher hearts.<br><br>
-         <b>Goal:</b> collect enough hearts to clear the level before time runs out.<br>
+         <b>Goal:</b> collect the required number of hearts before time runs out.<br>
          <b>Avoid:</b> dark orbs (you lose lives).<br>
          <b>Bonuses:</b> give Shield or Speed.<br><br>
+         <b>Controls:</b><br>
+         • <b>Move:</b> hold/touch to move toward your finger, or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
+         • <b>Jump:</b> click/tap anywhere or press <span class="kbd">Space</span><br>
+         • <b>Double-jump:</b> jump again in the air to reach higher hearts<br><br>
          Tap <b>Start</b> to begin.`
       );
 
