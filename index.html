@@ -6,127 +6,222 @@
   <title>Enchanted Hearts</title>
   <style>
     :root{
-      --bg1:#0b0b16; --bg2:#120a1a; --panel:#121225cc;
-      --text:#f4f4ff; --muted:#c8c8e8; --shadow: 0 12px 40px rgba(0,0,0,.45);
-      --radius:18px;
+      --panel:#121225cc;
+      --text:#f4f4ff;
+      --muted:#c8c8e8;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      margin:0; min-height:100vh; display:grid; place-items:center; padding:12px;
-      background: radial-gradient(1200px 700px at 20% 10%, #2b1244 0%, transparent 55%),
-                  radial-gradient(1000px 650px at 80% 20%, #1a3a4f 0%, transparent 60%),
-                  linear-gradient(160deg,var(--bg1),var(--bg2));
+      margin:0;
+      background:#05050b;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
-      overscroll-behavior: none;
-    }
-    .wrap{ width:min(1100px, 100%); display:grid; gap:12px; }
-    header{
-      display:flex; flex-wrap:wrap; gap:10px 14px; align-items:baseline; justify-content:space-between;
-      padding:12px 14px; border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      box-shadow: var(--shadow); backdrop-filter: blur(10px);
-    }
-    header h1{ margin:0; font-size: 18px; letter-spacing:.3px; display:flex; align-items:center; gap:8px; }
-    header .hint{ margin:0; color:var(--muted); font-size: 13px; line-height:1.35; }
-    .kbd{
-      display:inline-block; padding:2px 8px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.08);
-      color: var(--text); font-size: 12px;
+      overflow:hidden;            /* FULLSCREEN */
+      overscroll-behavior:none;
+      touch-action:none;
     }
 
+    /* FULLSCREEN CANVAS */
     .stage{
-      position:relative;
-      border-radius: var(--radius);
-      overflow:hidden;
-      box-shadow: var(--shadow);
-      background:#0a0a12;
+      position:fixed;
+      inset:0;
+      background:#05050b;
     }
     canvas{
-      width:100%;
-      height:auto;
+      position:absolute;
+      inset:0;
+      width:100vw;
+      height:100vh;
       display:block;
-      background:#080814;
-      touch-action: none; /* IMPORTANT for phones */
+      background:#070716;
+      touch-action:none;
     }
 
+    /* Top HUD hint bar (tiny) */
+    .topbar{
+      position:absolute;
+      left:12px;
+      right:12px;
+      top:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      pointer-events:none; /* lets touches go to canvas */
+      opacity:.95;
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:14px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.25;
+      text-align:right;
+    }
+    .kbd{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      font-size: 11px;
+      white-space:nowrap;
+    }
+
+    /* Overlay */
     .overlay{
-      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:16px;
-      background: radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
-                  radial-gradient(900px 520px at 50% 70%, rgba(139,92,246,.16), transparent 60%),
-                  rgba(0,0,0,.35);
-      backdrop-filter: blur(4px);
+      position:absolute; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background:
+        radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
+        radial-gradient(900px 520px at 50% 70%, rgba(139,92,246,.16), transparent 60%),
+        rgba(0,0,0,.42);
+      backdrop-filter: blur(6px);
     }
     .overlay.show{display:flex;}
     .panel{
-      width:min(680px, 100%);
+      width:min(760px, 100%);
       border-radius: 22px;
       padding:16px 16px 14px;
       background: var(--panel);
       border: 1px solid rgba(255,255,255,.10);
       box-shadow: 0 24px 70px rgba(0,0,0,.55);
     }
-    .panel h2{ margin:0 0 8px; font-size: 22px; letter-spacing:.2px; }
-    .panel p{ margin:0 0 12px; color:var(--muted); line-height:1.5; font-size:14px; }
-    .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px; }
+    .panel h2{ margin:0 0 10px; font-size: 22px; letter-spacing:.2px; }
+    .panel p{ margin:0 0 12px; color:var(--muted); line-height:1.55; font-size:14px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin: 12px 0 12px;
+    }
+    .card{
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .card b{color:var(--text)}
+    .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 8px; }
     button{
-      cursor:pointer; border:0; padding:10px 14px; border-radius: 12px; color:var(--text);
+      cursor:pointer;
+      border:0;
+      padding:10px 14px;
+      border-radius: 12px;
+      color:var(--text);
       background: linear-gradient(180deg, rgba(255,95,162,.95), rgba(255,95,162,.70));
       box-shadow: 0 10px 24px rgba(255,95,162,.25);
-      font-weight: 700; letter-spacing:.2px;
+      font-weight: 800;
+      letter-spacing:.2px;
     }
     button.secondary{
-      background: rgba(255,255,255,.10); box-shadow:none;
-      border: 1px solid rgba(255,255,255,.12); color:var(--text); font-weight: 600;
+      background: rgba(255,255,255,.10);
+      box-shadow:none;
+      border: 1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      font-weight: 700;
     }
     .footerline{
-      margin-top: 10px; display:flex; gap:10px; align-items:center; justify-content:space-between;
-      flex-wrap:wrap; color:var(--muted); font-size:12px;
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
     }
     .errorbar{
-      margin-top: 10px; display:none; padding:10px 12px; border-radius: 14px;
-      background: rgba(251,113,133,.14); border: 1px solid rgba(251,113,133,.25);
-      color: #ffd7de; font-size: 13px; line-height:1.35;
+      margin-top: 10px;
+      display:none;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(251,113,133,.14);
+      border: 1px solid rgba(251,113,133,.25);
+      color: #ffd7de;
+      font-size: 13px;
+      line-height:1.35;
     }
     .errorbar.show{display:block;}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>🔮💖 Enchanted Hearts</h1>
-      <p class="hint">
-        <b>Mouse/Touch:</b> Hold to move toward your finger/cursor · Tap upper area to jump · Start/Restart: <span class="kbd">Enter</span>
-      </p>
-    </header>
+  <div class="stage">
+    <canvas id="c"></canvas>
 
-    <div class="stage">
-      <canvas id="c"></canvas>
+    <div class="topbar">
+      <div class="title">🔮💖 Enchanted Hearts</div>
+      <div class="hint">
+        Hold to move • Tap upper half to jump • Double-jump enabled • Restart: <span class="kbd">Enter</span>
+      </div>
+    </div>
 
-      <div id="overlay" class="overlay show" aria-hidden="false">
-        <div class="panel">
-          <h2 id="ovTitle">Welcome to Enchanted Hearts</h2>
-          <p id="ovText">
-            <b>Controls</b> (no keyboard needed):<br>
-            • <b>Hold</b> mouse/touch to move toward your cursor/finger<br>
-            • <b>Tap/Click in the upper half</b> of the game to jump (while on ground)<br><br>
-            Files must be in the <b>repo root</b>: <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
-          </p>
+    <div id="overlay" class="overlay show" aria-hidden="false">
+      <div class="panel">
+        <h2 id="ovTitle">How to Play</h2>
+        <p id="ovText">
+          Welcome! This game is <b>fullscreen</b> and made for <b>phones</b>.<br><br>
+          <b>Goal:</b> collect the required number of hearts before time runs out.
+          Avoid dark orbs, and grab bonuses for temporary power-ups.
+        </p>
 
-          <div class="buttons">
-            <button id="btnStart">Start</button>
-            <button id="btnHow" class="secondary">Rules</button>
+        <div class="grid">
+          <div class="card">
+            <b>Controls (Mouse/Touch)</b><br>
+            • <b>Hold</b> anywhere to move toward your finger/cursor<br>
+            • <b>Tap in the upper half</b> to jump<br>
+            • You can <b>double-jump</b> to reach any heart
           </div>
-
-          <div class="footerline">
-            <span>Tip: On phone, play in landscape for more space.</span>
-            <span id="bestLine">Best: 0</span>
+          <div class="card">
+            <b>Scoring</b><br>
+            • Heart: <b>+10</b><br>
+            • Bonus pickup: <b>+15</b><br>
+            • Shield blocks an orb: <b>+5</b><br>
+            • Level clear: time bonus
           </div>
-
-          <div id="err" class="errorbar">
-            Some images failed to load. The game will still run using simple shapes as fallback.
-            Check file names match exactly (case-sensitive on GitHub Pages).
+          <div class="card">
+            <b>Items</b><br>
+            • Heart: <span class="kbd">K.png</span><br>
+            • Dark orb: <span class="kbd">N.png</span><br>
+            • Bonus: <span class="kbd">U.png</span>
           </div>
+          <div class="card">
+            <b>Files (Repo Root)</b><br>
+            Put these next to <span class="kbd">index.html</span>:<br>
+            <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button id="btnStart">Start</button>
+          <button id="btnRules" class="secondary">Show Short Rules</button>
+        </div>
+
+        <div class="footerline">
+          <span id="bestLine">Best: 0</span>
+          <span>Tip: Rotate your phone to landscape for more space.</span>
+        </div>
+
+        <div id="err" class="errorbar">
+          Some images failed to load. The game will still run using simple shapes as fallback.
+          Check file names match exactly (case-sensitive on GitHub Pages).
         </div>
       </div>
     </div>
@@ -134,67 +229,86 @@
 
   <script>
     /***********************
-     * Single-file (NO assets folder)
-     * Repo root must contain:
+     * FULLSCREEN + MOBILE + MOUSE/TOUCH CONTROLS
+     * NO assets folder. Files in repo root:
      * index.html + G.png K.png N.png U.png P.png F.png Y.png E.png
      ***********************/
 
-    // ===== Canvas setup (responsive + crisp on phone)
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
-    // Logical (game) resolution. We scale to screen via DPR.
-    let W = 960, H = 540;           // will be recalculated on resize
-    let dpr = 1;
-
-    function resizeCanvas() {
-      const stage = canvas.parentElement;
-      const maxWidth = stage.clientWidth;
-
-      // Fit height to viewport (keep some room for header)
-      const maxHeight = Math.min(window.innerHeight * 0.78, 720);
-
-      // Keep 16:9
-      let cssW = maxWidth;
-      let cssH = cssW * 9 / 16;
-      if (cssH > maxHeight) {
-        cssH = maxHeight;
-        cssW = cssH * 16 / 9;
-      }
-
-      // Set logical resolution based on css size (stable physics)
-      W = 960;
-      H = Math.round(W * 9 / 16);
-
-      // Actually render at DPR for sharpness
-      dpr = Math.min(window.devicePixelRatio || 1, 2); // cap for performance
-      canvas.style.width = cssW + "px";
-      canvas.style.height = cssH + "px";
-      canvas.width = Math.floor(W * dpr);
-      canvas.height = Math.floor(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // Update ground based on H
-      GROUND_Y = H - 72;
-
-      // Keep player on ground after resize
-      if (player) {
-        player.y = Math.min(player.y, GROUND_Y - player.h);
-      }
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-
-    // ===== Overlay UI
     const overlay = document.getElementById("overlay");
     const ovTitle = document.getElementById("ovTitle");
     const ovText  = document.getElementById("ovText");
     const btnStart = document.getElementById("btnStart");
-    const btnHow = document.getElementById("btnHow");
+    const btnRules = document.getElementById("btnRules");
     const errBar = document.getElementById("err");
     const bestLine = document.getElementById("bestLine");
 
-    // ===== Assets (ROOT paths)
+    // Game size in CSS pixels (we set logical coords == viewport pixels)
+    let W = 960, H = 540;
+    let dpr = 1;
+    let GROUND_Y = 0;
+
+    function resizeCanvas(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssW = Math.floor(window.innerWidth);
+      const cssH = Math.floor(window.innerHeight);
+
+      W = cssW;
+      H = cssH;
+
+      canvas.width  = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+
+      // Scale drawing back to CSS pixels
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Ground adapts to screen
+      const groundThickness = Math.max(78, Math.floor(H * 0.14));
+      GROUND_Y = H - groundThickness;
+
+      // Player scales with screen so it looks good on phone
+      player.h = Math.max(92, Math.floor(H * 0.18));
+      player.w = Math.max(70, Math.floor(player.h * 0.80));
+
+      // Keep player on ground after resize
+      player.y = Math.min(player.y, GROUND_Y - player.h);
+      if (player.y < 0) player.y = GROUND_Y - player.h;
+      player.x = Math.min(player.x, W - player.w);
+
+      // Recompute jump strength to always reach hearts
+      recomputeJumpPhysics();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    // Physics (will be tuned by recomputeJumpPhysics)
+    let GRAVITY = 2100;
+    let MOVE_SPEED = 0;
+    let JUMP_V = 0;
+
+    function recomputeJumpPhysics(){
+      // Movement speed relative to screen width
+      MOVE_SPEED = Math.max(340, Math.floor(W * 0.40));
+
+      // Make jump powerful enough to reach any heart:
+      // choose maxJumpHeight ~ 45% of usable height
+      const usable = (GROUND_Y - 60);
+      const targetJumpHeight = Math.max(240, usable * 0.45);
+
+      // pick gravity based on height for a nice feel (not too floaty)
+      GRAVITY = Math.max(1900, Math.floor(usable * 4.2));
+
+      // JUMP_V derived from height: h = v^2 / (2g) => v = sqrt(2gh)
+      JUMP_V = Math.sqrt(2 * GRAVITY * targetJumpHeight);
+
+      // cap extremes (safety)
+      JUMP_V = Math.min(Math.max(JUMP_V, 780), 1400);
+      GRAVITY = Math.min(Math.max(GRAVITY, 1600), 3600);
+    }
+
+    // Assets (ROOT)
     const ASSETS = {
       player: "G.png",
       heart:  "K.png",
@@ -212,20 +326,14 @@
       { id: 3, bgKey: "bg3", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
     ];
 
-    // ===== Physics
-    const GRAVITY = 2000;
-    const MOVE_SPEED = 360;
-    const JUMP_V = 820;
-
-    // ===== Utilities
+    // Utils
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const rand = (a,b) => a + Math.random()*(b-a);
-
     function aabb(ax, ay, aw, ah, bx, by, bw, bh){
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
-    // ===== Asset Loading
+    // Assets loading
     function loadImage(src){
       return new Promise((resolve) => {
         const img = new Image();
@@ -234,14 +342,13 @@
         img.src = src;
       });
     }
-
     const IMG = { player:null, heart:null, orb:null, bonus:null, ui:null, bg1:null, bg2:null, bg3:null };
 
     async function loadAllAssets(){
       const entries = Object.entries(ASSETS);
       const results = await Promise.all(entries.map(([_, src]) => loadImage(src)));
-
       let failed = 0;
+
       for (let i=0;i<entries.length;i++){
         const key = entries[i][0];
         const r = results[i];
@@ -250,7 +357,6 @@
           console.warn("FAILED to load:", key, r.src);
           IMG[key] = null;
         } else {
-          console.log("Loaded:", key, r.src);
           IMG[key] = r.img;
         }
       }
@@ -258,66 +364,7 @@
       else errBar.classList.remove("show");
     }
 
-    // ===== Input
-    // Keep keyboard fallback (optional), but mouse/touch is primary
-    const keys = new Set();
-    addEventListener("keydown", (e)=>{
-      const k = e.key.toLowerCase();
-      keys.add(k);
-      if (k === "enter") {
-        if (state.mode !== "PLAY") startOrRestart();
-      }
-      if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
-    }, { passive:false });
-    addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
-
-    // Pointer (mouse + touch)
-    const pointer = {
-      down: false,
-      x: W/2,
-      y: H/2,
-      jumpedThisPress: false,
-    };
-
-    function canvasToGameXY(evt){
-      const rect = canvas.getBoundingClientRect();
-      const x = (evt.clientX - rect.left) * (W / rect.width);
-      const y = (evt.clientY - rect.top)  * (H / rect.height);
-      return { x, y };
-    }
-
-    function onPointerDown(evt){
-      if (state.mode !== "PLAY") return; // ignore while overlay/menu
-      pointer.down = true;
-      pointer.jumpedThisPress = false;
-      const p = canvasToGameXY(evt);
-      pointer.x = p.x; pointer.y = p.y;
-
-      // Jump if you tap/click in upper half (and you're on ground)
-      if (!pointer.jumpedThisPress && player.onGround && p.y < H * 0.5 && player.stun <= 0){
-        player.vy = -JUMP_V;
-        player.onGround = false;
-        pointer.jumpedThisPress = true;
-      }
-    }
-
-    function onPointerMove(evt){
-      if (!pointer.down) return;
-      const p = canvasToGameXY(evt);
-      pointer.x = p.x; pointer.y = p.y;
-    }
-
-    function onPointerUp(){
-      pointer.down = false;
-      pointer.jumpedThisPress = false;
-    }
-
-    canvas.addEventListener("pointerdown", (e)=>{ canvas.setPointerCapture(e.pointerId); onPointerDown(e); });
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", onPointerUp);
-    canvas.addEventListener("pointercancel", onPointerUp);
-
-    // ===== Game State
+    // State
     const state = {
       mode: "MENU", // MENU, PLAY, WIN, LOSE
       levelIndex: 0,
@@ -334,39 +381,81 @@
     };
     bestLine.textContent = `Best: ${state.best}`;
 
-    // ===== Entities
-    let GROUND_Y = 468; // will be set by resizeCanvas()
-
-    // BIGGER PLAYER ✅
+    // Player (size set on resize)
     const player = {
       x: 120,
       y: 0,
-      w: 84,   // bigger width
-      h: 104,  // bigger height
+      w: 84,
+      h: 104,
       vx: 0,
       vy: 0,
       onGround: true,
       stun: 0,
+      jumpsLeft: 2,          // DOUBLE JUMP ✅
+      maxJumps: 2,
     };
 
+    // Entities
     let hearts = [];
     let orbs = [];
     let bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
 
-    // ===== Drawing helpers
+    // Pointer controls
+    const pointer = { down:false, x:0, y:0 };
+
+    function canvasToGameXY(evt){
+      const rect = canvas.getBoundingClientRect();
+      const x = (evt.clientX - rect.left) * (W / rect.width);
+      const y = (evt.clientY - rect.top)  * (H / rect.height);
+      return { x, y };
+    }
+
+    function tryJump(){
+      if (player.stun > 0) return;
+      if (player.jumpsLeft <= 0) return;
+      player.vy = -JUMP_V;
+      player.onGround = false;
+      player.jumpsLeft -= 1;
+    }
+
+    canvas.addEventListener("pointerdown", (e)=>{
+      if (state.mode !== "PLAY") return;
+      canvas.setPointerCapture(e.pointerId);
+      pointer.down = true;
+      const p = canvasToGameXY(e);
+      pointer.x = p.x; pointer.y = p.y;
+
+      // Tap/click upper half => jump
+      if (p.y < H * 0.55) tryJump();
+    });
+    canvas.addEventListener("pointermove", (e)=>{
+      if (!pointer.down) return;
+      const p = canvasToGameXY(e);
+      pointer.x = p.x; pointer.y = p.y;
+    });
+    function pointerUp(){ pointer.down = false; }
+    canvas.addEventListener("pointerup", pointerUp);
+    canvas.addEventListener("pointercancel", pointerUp);
+
+    // Keyboard restart only (optional)
+    addEventListener("keydown", (e)=>{
+      if (e.key.toLowerCase() === "enter" && state.mode !== "PLAY") startOrRestart();
+    });
+
+    // Drawing helpers
     function roundRect(x, y, w, h, r, fill, stroke) {
-      if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
+      const rr = typeof r === "number" ? {tl:r, tr:r, br:r, bl:r} : r;
       ctx.beginPath();
-      ctx.moveTo(x + r.tl, y);
-      ctx.lineTo(x + w - r.tr, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-      ctx.lineTo(x + w, y + h - r.br);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-      ctx.lineTo(x + r.bl, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-      ctx.lineTo(x, y + r.tl);
-      ctx.quadraticCurveTo(x, y, x + r.tl, y);
+      ctx.moveTo(x + rr.tl, y);
+      ctx.lineTo(x + w - rr.tr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr.tr);
+      ctx.lineTo(x + w, y + h - rr.br);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr.br, y + h);
+      ctx.lineTo(x + rr.bl, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr.bl);
+      ctx.lineTo(x, y + rr.tl);
+      ctx.quadraticCurveTo(x, y, x + rr.tl, y);
       ctx.closePath();
       if (fill) ctx.fill();
       if (stroke) ctx.stroke();
@@ -387,12 +476,17 @@
         ctx.fillStyle = g;
         ctx.fillRect(0,0,W,H);
         ctx.globalAlpha = 0.35;
-        for (let i=0;i<70;i++){
+        for (let i=0;i<110;i++){
           ctx.fillStyle = "white";
           ctx.fillRect((i*97)%W, (i*43)%H, 2, 2);
         }
         ctx.globalAlpha = 1;
       }
+      // soft vignette
+      ctx.globalAlpha = 0.20;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha = 1;
     }
 
     function drawGround(){
@@ -406,13 +500,16 @@
     }
 
     function drawSpriteOrFallback(img, x, y, w, h, kind){
-      if (img){ ctx.drawImage(img, x, y, w, h); return; }
-
+      if (img){
+        ctx.drawImage(img, x, y, w, h);
+        return;
+      }
+      // fallback shapes
       if (kind === "player"){
         ctx.fillStyle = "rgba(255,255,255,.85)";
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = "rgba(255,95,162,.9)";
-        ctx.fillRect(x+14, y+14, w-28, 12);
+        ctx.fillRect(x+Math.floor(w*0.16), y+Math.floor(h*0.12), Math.floor(w*0.68), Math.max(10, Math.floor(h*0.12)));
       } else if (kind === "heart"){
         ctx.fillStyle = "rgba(255,95,162,.9)";
         ctx.beginPath();
@@ -441,41 +538,31 @@
       }
     }
 
-    function drawBuffPill(x,y,label,seconds){
-      ctx.save();
-      ctx.globalAlpha = 0.92;
-      ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(x, y, 160, 24, 999, true, false);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "rgba(255,255,255,.9)";
-      ctx.font = "700 12px ui-sans-serif, system-ui";
-      ctx.fillText(`${label}: ${seconds}s`, x+10, y+16);
-      ctx.restore();
-    }
-
     function drawHUD(){
+      // compact HUD for fullscreen
       ctx.save();
       ctx.globalAlpha = 0.92;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(14, 14, 340, 86, 16, true, false);
+      roundRect(12, 72, 330, 92, 16, true, false);
       ctx.globalAlpha = 1;
 
       const lvl = LEVELS[state.levelIndex].id;
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "700 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Level: ${lvl}`, 28, 40);
+      ctx.font = "800 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Level: ${lvl}`, 24, 98);
 
-      ctx.font = "600 14px ui-sans-serif, system-ui";
+      ctx.font = "700 14px ui-sans-serif, system-ui";
       ctx.fillStyle = "rgba(255,255,255,.85)";
-      ctx.fillText(`Score: ${state.score}`, 28, 62);
-      ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 28, 82);
+      ctx.fillText(`Score: ${state.score}`, 24, 120);
+      ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 24, 142);
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "700 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 220, 40);
+      ctx.font = "800 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 210, 98);
 
-      const lx = 220, ly = 52;
+      // Lives icons
+      const lx = 210, ly = 112;
       for (let i=0;i<3;i++){
         const alive = i < state.lives;
         const x = lx + i*28, y = ly;
@@ -496,18 +583,25 @@
         }
       }
 
-      let bx = 372, by = 18;
-      if (state.shieldTime > 0) { drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
-      if (state.speedTime > 0)  { drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime));  }
+      // Buff pills
+      let bx = 360, by = 78;
+      if (state.shieldTime > 0){
+        drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime));
+        by += 30;
+      }
+      if (state.speedTime > 0){
+        drawBuffPill(bx, by, "Speed", Math.ceil(state.speedTime));
+      }
 
+      // Message
       if (state.messageTime > 0){
         ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
         ctx.fillStyle = "rgba(0,0,0,.35)";
-        roundRect(W/2 - 170, 18, 340, 40, 14, true, false);
+        roundRect(W/2 - 200, 72, 400, 40, 14, true, false);
         ctx.fillStyle = "rgba(255,255,255,.92)";
-        ctx.font = "700 14px ui-sans-serif, system-ui";
+        ctx.font = "800 14px ui-sans-serif, system-ui";
         ctx.textAlign = "center";
-        ctx.fillText(state.messageText, W/2, 44);
+        ctx.fillText(state.messageText, W/2, 98);
         ctx.textAlign = "left";
         ctx.globalAlpha = 1;
       }
@@ -515,32 +609,74 @@
       ctx.restore();
     }
 
-    // ===== Spawning
-    function resetSpawns(){ hearts=[]; orbs=[]; bonuses=[]; tHeart=0; tOrb=0; tBonus=0; }
+    function drawBuffPill(x,y,label,seconds){
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      roundRect(x, y, 160, 24, 999, true, false);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "800 12px ui-sans-serif, system-ui";
+      ctx.fillText(`${label}: ${seconds}s`, x+10, y+16);
+      ctx.restore();
+    }
+
+    // Spawning (ensure hearts always reachable even without perfect timing)
+    function resetSpawns(){
+      hearts = []; orbs = []; bonuses = [];
+      tHeart = 0; tOrb = 0; tBonus = 0;
+    }
+
+    function maxJumpHeight(){
+      return (JUMP_V * JUMP_V) / (2 * GRAVITY);
+    }
 
     function spawnHeart(){
-      const size = rand(30, 42);
-      hearts.push({ x: rand(80, W-80), y: rand(110, GROUND_Y-180), w:size, h:size, bob: rand(0, Math.PI*2) });
+      const size = rand(Math.max(30, H*0.05), Math.max(44, H*0.065));
+      const mh = maxJumpHeight();
+
+      // Keep hearts within reachable height; double jump makes it even easier
+      const topLimit = Math.max(60, GROUND_Y - mh * 0.95);     // highest (small y)
+      const bottomLimit = Math.max(120, GROUND_Y - player.h - 40);
+
+      hearts.push({
+        x: rand(60, W-60),
+        y: rand(topLimit, bottomLimit),
+        w: size, h: size,
+        bob: rand(0, Math.PI*2),
+      });
     }
+
     function spawnOrb(){
-      const size = rand(36, 52);
+      const size = rand(Math.max(36, H*0.06), Math.max(56, H*0.085));
       const fromLeft = Math.random() < 0.5;
       orbs.push({
         x: fromLeft ? -size : W + size,
-        y: rand(100, GROUND_Y-110),
-        w:size, h:size,
-        vx: fromLeft ? rand(120, 230) : -rand(120, 230),
+        y: rand(90, GROUND_Y - size - 10),
+        w: size, h: size,
+        vx: fromLeft ? rand(120, 240) : -rand(120, 240),
         vy: rand(-30, 30),
         phase: rand(0, Math.PI*2),
       });
     }
+
     function spawnBonus(){
-      const size = rand(34, 46);
+      const size = rand(Math.max(34, H*0.055), Math.max(50, H*0.075));
       const type = Math.random() < 0.5 ? "SHIELD" : "SPEED";
-      bonuses.push({ x: rand(90, W-90), y: rand(120, GROUND_Y-190), w:size, h:size, type, bob: rand(0, Math.PI*2) });
+      const mh = maxJumpHeight();
+      const topLimit = Math.max(70, GROUND_Y - mh * 0.85);
+      const bottomLimit = Math.max(130, GROUND_Y - player.h - 50);
+
+      bonuses.push({
+        x: rand(70, W-70),
+        y: rand(topLimit, bottomLimit),
+        w: size, h: size,
+        type,
+        bob: rand(0, Math.PI*2),
+      });
     }
 
-    // ===== Flow
+    // Flow
     function showOverlay(title, html){
       ovTitle.textContent = title;
       ovText.innerHTML = html;
@@ -576,17 +712,18 @@
       state.messageTime = 0;
       state.messageText = "";
 
-      player.x = 120;
+      player.x = Math.max(40, W * 0.10);
       player.y = GROUND_Y - player.h;
       player.vx = 0;
       player.vy = 0;
       player.onGround = true;
       player.stun = 0;
+      player.jumpsLeft = player.maxJumps;
 
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
       resetSpawns();
-      for (let i=0;i<4;i++) spawnHeart();
 
+      for (let i=0;i<4;i++) spawnHeart();
       hideOverlay();
     }
 
@@ -600,7 +737,7 @@
           `You restored the Enchanted Hearts!<br><br>
            <b>Final score:</b> ${state.score}<br>
            <b>Best score:</b> ${state.best}<br><br>
-           Press <b>Enter</b> to play again.`
+           Tap <b>Start</b> or press <b>Enter</b> to play again.`
         );
         return;
       }
@@ -611,12 +748,13 @@
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
       resetSpawns();
 
-      player.x = 120;
+      player.x = Math.max(40, W * 0.10);
       player.y = GROUND_Y - player.h;
       player.vx = 0;
       player.vy = 0;
       player.onGround = true;
       player.stun = 0;
+      player.jumpsLeft = player.maxJumps;
 
       flashMessage(`Level ${LEVELS[state.levelIndex].id}!`, 1.2);
     }
@@ -629,11 +767,11 @@
         `${reason}<br><br>
          <b>Your score:</b> ${state.score}<br>
          <b>Best score:</b> ${state.best}<br><br>
-         Press <b>Enter</b> to restart.`
+         Tap <b>Start</b> or press <b>Enter</b> to restart.`
       );
     }
 
-    // ===== Update / Draw
+    // Update / draw
     let last = performance.now();
 
     function update(dt){
@@ -652,23 +790,13 @@
       state.screenShake = Math.max(0, state.screenShake - dt*2.4);
       player.stun = Math.max(0, player.stun - dt);
 
-      // Keyboard fallback (optional)
-      const leftK  = keys.has("arrowleft") || keys.has("a");
-      const rightK = keys.has("arrowright") || keys.has("d");
-      const jumpK  = keys.has(" ") || keys.has("w") || keys.has("arrowup");
-
       const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
 
-      // ===== Mouse/Touch movement (PRIMARY)
-      // Hold to move toward pointer.x
+      // Hold to move toward pointer
       let moveDir = 0;
-      if (pointer.down) {
+      if (pointer.down){
         const dx = pointer.x - (player.x + player.w/2);
         if (Math.abs(dx) > 10) moveDir = dx > 0 ? 1 : -1;
-      } else {
-        // keyboard fallback
-        if (leftK && !rightK) moveDir = -1;
-        if (rightK && !leftK) moveDir = 1;
       }
 
       if (player.stun > 0){
@@ -678,12 +806,6 @@
         else player.vx *= 0.86;
       }
 
-      // Jump fallback by keyboard (mouse/touch jump handled on pointerdown upper half)
-      if (jumpK && player.onGround && player.stun <= 0){
-        player.vy = -JUMP_V;
-        player.onGround = false;
-      }
-
       // Physics integrate
       player.vy += GRAVITY * dt;
       player.x += player.vx * dt;
@@ -691,31 +813,39 @@
 
       player.x = clamp(player.x, 0, W - player.w);
 
+      // Ground collision + reset jumps
       if (player.y + player.h >= GROUND_Y){
         player.y = GROUND_Y - player.h;
         player.vy = 0;
+        if (!player.onGround){
+          player.jumpsLeft = player.maxJumps;   // reset jumps on landing ✅
+        }
         player.onGround = true;
-      } else player.onGround = false;
+      } else {
+        player.onGround = false;
+      }
 
-      // Spawn based on level
+      // Spawning
       const L = LEVELS[state.levelIndex];
       tHeart += dt * L.heartRate;
       tOrb   += dt * L.orbRate;
       tBonus += dt * L.bonusRate;
 
-      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 18) spawnHeart(); }
-      while (tOrb >= 1){ tOrb -= 1; if (orbs.length < 10) spawnOrb(); }
+      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 20) spawnHeart(); }
+      while (tOrb   >= 1){ tOrb   -= 1; if (orbs.length < 12) spawnOrb(); }
       while (tBonus >= 1){ tBonus -= 1; if (bonuses.length < 3) spawnBonus(); }
 
-      for (const h of hearts){ h.bob += dt * 3.2; }
+      for (const h of hearts) h.bob += dt * 3.2;
+      for (const b of bonuses) b.bob += dt * 2.8;
+
       for (const o of orbs){
         o.phase += dt * 2.3;
         o.y += Math.sin(o.phase) * 20 * dt + o.vy * dt;
         o.x += o.vx * dt;
-        if (o.y < 70) { o.y = 70; o.vy = Math.abs(o.vy); }
+
+        if (o.y < 60) { o.y = 60; o.vy = Math.abs(o.vy); }
         if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
       }
-      for (const b of bonuses){ b.bob += dt * 2.8; }
 
       // Collisions: hearts
       for (let i=hearts.length-1;i>=0;i--){
@@ -756,7 +886,7 @@
       // Collisions: orbs
       for (let i=orbs.length-1;i>=0;i--){
         const o = orbs[i];
-        if (o.x < -140 || o.x > W + 140){ orbs.splice(i,1); continue; }
+        if (o.x < -180 || o.x > W + 180){ orbs.splice(i,1); continue; }
 
         if (aabb(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)){
           if (state.shieldTime > 0){
@@ -781,7 +911,7 @@
     }
 
     function draw(){
-      // screen shake
+      // shake
       let sx = 0, sy = 0;
       if (state.screenShake > 0){
         const m = state.screenShake * 6;
@@ -792,25 +922,17 @@
       ctx.save();
       ctx.translate(sx, sy);
 
-      // background
       const bg = IMG[LEVELS[state.levelIndex].bgKey] || null;
       drawBg(bg);
-
-      // vignette
-      ctx.globalAlpha = 0.22;
-      ctx.fillStyle = "black";
-      ctx.fillRect(0,0,W,H);
-      ctx.globalAlpha = 1;
-
       drawGround();
 
       // hearts
       for (const h of hearts){
         const bobY = Math.sin(h.bob) * 6;
         drawSpriteOrFallback(IMG.heart, h.x, h.y + bobY, h.w, h.h, "heart");
-        ctx.globalAlpha = 0.18;
+        ctx.globalAlpha = 0.16;
         ctx.beginPath();
-        ctx.arc(h.x+h.w/2, h.y+h.h/2 + bobY, h.w*0.9, 0, Math.PI*2);
+        ctx.arc(h.x+h.w/2, h.y+h.h/2 + bobY, h.w*0.95, 0, Math.PI*2);
         ctx.fillStyle = "rgba(255,95,162,1)";
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -820,8 +942,9 @@
       for (const b of bonuses){
         const bobY = Math.sin(b.bob) * 6;
         drawSpriteOrFallback(IMG.bonus, b.x, b.y + bobY, b.w, b.h, "bonus");
-        ctx.globalAlpha = 0.35;
-        ctx.strokeStyle = b.type === "SHIELD" ? "rgba(52,211,153,1)" : "rgba(255,95,162,1)";
+
+        ctx.globalAlpha = 0.32;
+        ctx.strokeStyle = (b.type === "SHIELD") ? "rgba(52,211,153,1)" : "rgba(255,95,162,1)";
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(b.x+b.w/2, b.y+b.h/2 + bobY, b.w*0.55, 0, Math.PI*2);
@@ -832,9 +955,9 @@
       // orbs
       for (const o of orbs){
         drawSpriteOrFallback(IMG.orb, o.x, o.y, o.w, o.h, "orb");
-        ctx.globalAlpha = 0.14;
+        ctx.globalAlpha = 0.12;
         ctx.beginPath();
-        ctx.arc(o.x+o.w/2, o.y+o.h/2, o.w*0.9, 0, Math.PI*2);
+        ctx.arc(o.x+o.w/2, o.y+o.h/2, o.w*0.95, 0, Math.PI*2);
         ctx.fillStyle = "rgba(139,92,246,1)";
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -842,15 +965,15 @@
 
       // shield aura
       if (state.shieldTime > 0){
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = 0.20;
         ctx.beginPath();
-        ctx.arc(player.x+player.w/2, player.y+player.h/2, 64, 0, Math.PI*2);
+        ctx.arc(player.x+player.w/2, player.y+player.h/2, Math.max(64, player.h*0.65), 0, Math.PI*2);
         ctx.fillStyle = "rgba(52,211,153,1)";
         ctx.fill();
         ctx.globalAlpha = 1;
       }
 
-      // player (bigger)
+      // player
       drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
 
       drawHUD();
@@ -865,54 +988,47 @@
       requestAnimationFrame(loop);
     }
 
-    // ===== UI
+    // UI buttons
     btnStart.addEventListener("click", () => startOrRestart());
-    btnHow.addEventListener("click", () => {
-      ovText.innerHTML =
-        `Rules:<br>
-         • Collect <b>hearts</b> to clear each level<br>
-         • Avoid <b>dark orbs</b> (lose lives)<br>
-         • Bonuses give <b>Shield</b> or <b>Speed</b><br><br>
-         Controls:<br>
-         • <b>Hold</b> mouse/touch to move toward your finger/cursor<br>
-         • <b>Tap/click upper half</b> to jump (when on ground)`;
+    btnRules.addEventListener("click", () => {
+      showOverlay(
+        "Quick Rules",
+        `• Hold to move toward your finger/cursor<br>
+         • Tap the upper half to jump<br>
+         • You have <b>double-jump</b> (2 jumps before landing)<br>
+         • Collect hearts to clear each level<br>
+         • Avoid dark orbs (lose lives)<br><br>
+         Tap <b>Start</b> to play.`
+      );
     });
 
-    function showOverlay(title, html){
-      ovTitle.textContent = title;
-      ovText.innerHTML = html;
-      overlay.classList.add("show");
-      overlay.setAttribute("aria-hidden", "false");
-      bestLine.textContent = `Best: ${state.best}`;
-    }
-    function hideOverlay(){
-      overlay.classList.remove("show");
-      overlay.setAttribute("aria-hidden", "true");
-    }
-
-    // ===== Boot
+    // Boot
     (async function boot(){
       resizeCanvas();
-      // initial player placement after resize
       player.y = GROUND_Y - player.h;
 
       await loadAllAssets();
 
+      // best score
       state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
       bestLine.textContent = `Best: ${state.best}`;
 
       requestAnimationFrame((t)=>{ last = t; loop(t); });
 
       showOverlay(
-        "Welcome to Enchanted Hearts",
-        `Mouse/Touch controls (no keyboard needed):<br>
-         • <b>Hold</b> to move toward your finger/cursor<br>
-         • <b>Tap/click upper half</b> to jump<br><br>
-         Press <b>Start</b> to begin.`
+        "How to Play",
+        `This game is <b>fullscreen</b> and <b>mobile-friendly</b> ✅<br><br>
+         <b>1) Move:</b> <b>Hold</b> your finger/mouse anywhere and the wizard moves toward it.<br>
+         <b>2) Jump:</b> <b>Tap/click in the upper half</b> of the screen to jump.<br>
+         <b>3) Double-jump:</b> tap again in the air to reach higher hearts.<br><br>
+         <b>Goal:</b> collect enough hearts to clear the level before time runs out.<br>
+         <b>Avoid:</b> dark orbs (you lose lives).<br>
+         <b>Bonuses:</b> give Shield or Speed.<br><br>
+         Tap <b>Start</b> to begin.`
       );
+
       state.mode = "MENU";
     })();
-
   </script>
 </body>
 </html>
