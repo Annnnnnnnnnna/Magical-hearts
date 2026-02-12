@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Enchanted Hearts</title>
+  <style>
+    :root{
+      --bg1:#0b0b16;
+      --bg2:#120a1a;
+      --panel:#121225cc;
+      --text:#f4f4ff;
+      --muted:#c8c8e8;
+      --accent:#ff5fa2;
+      --accent2:#8b5cf6;
+      --good:#34d399;
+      --bad:#fb7185;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(1200px 700px at 20% 10%, #2b1244 0%, transparent 55%),
+                  radial-gradient(1000px 650px at 80% 20%, #1a3a4f 0%, transparent 60%),
+                  linear-gradient(160deg,var(--bg1),var(--bg2));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      padding:16px;
+    }
+    .wrap{
+      width:min(1100px, 100%);
+      display:grid;
+      gap:14px;
+    }
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      align-items:baseline;
+      justify-content:space-between;
+      padding:14px 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    header h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.3px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    header .hint{
+      margin:0;
+      color:var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+    }
+    .stage{
+      position:relative;
+      border-radius: var(--radius);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background:#0a0a12;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      display:block;
+      background:#080814;
+    }
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
+                  radial-gradient(900px 520px at 50% 70%, rgba(139,92,246,.16), transparent 60%),
+                  rgba(0,0,0,.35);
+      backdrop-filter: blur(4px);
+    }
+    .overlay.show{display:flex;}
+    .panel{
+      width:min(620px, 100%);
+      border-radius: 22px;
+      padding:18px 18px 16px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 24px 70px rgba(0,0,0,.55);
+    }
+    .panel h2{
+      margin:0 0 8px;
+      font-size: 22px;
+      letter-spacing:.2px;
+    }
+    .panel p{
+      margin:0 0 12px;
+      color:var(--muted);
+      line-height:1.5;
+      font-size:14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin: 10px 0 14px;
+    }
+    .card{
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .card b{color:var(--text)}
+    .card small{color:var(--muted)}
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 10px;
+    }
+    button{
+      cursor:pointer;
+      border:0;
+      padding:10px 14px;
+      border-radius: 12px;
+      color:var(--text);
+      background: linear-gradient(180deg, rgba(255,95,162,.95), rgba(255,95,162,.70));
+      box-shadow: 0 10px 24px rgba(255,95,162,.25);
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+    button.secondary{
+      background: rgba(255,255,255,.10);
+      box-shadow:none;
+      border: 1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      font-weight: 600;
+    }
+    button:active{transform: translateY(1px)}
+    .footerline{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .kbd{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .errorbar{
+      margin-top: 10px;
+      display:none;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(251,113,133,.14);
+      border: 1px solid rgba(251,113,133,.25);
+      color: #ffd7de;
+      font-size: 13px;
+      line-height:1.35;
+    }
+    .errorbar.show{display:block;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🔮💖 Enchanted Hearts</h1>
+      <p class="hint">
+        Move: <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span> · Jump: <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span> · Start/Restart: <span class="kbd">Enter</span>
+      </p>
+    </header>
+
+    <div class="stage">
+      <canvas id="c" width="960" height="540"></canvas>
+
+      <div id="overlay" class="overlay show" aria-hidden="false">
+        <div class="panel">
+          <h2 id="ovTitle">Welcome to Enchanted Hearts</h2>
+          <p id="ovText">
+            Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.
+            Three levels, three backgrounds — one Valentine’s night full of spells.
+          </p>
+
+          <div class="grid">
+            <div class="card">
+              <b>❤️ Heart (K.png)</b><br />
+              <small>+10 score · Needed to clear the level</small>
+            </div>
+            <div class="card">
+              <b>🖤 Dark Orb (N.png)</b><br />
+              <small>-1 life · Brief stun</small>
+            </div>
+            <div class="card">
+              <b>✨ Bonus (U.png)</b><br />
+              <small>Shield or Speed (random)</small>
+            </div>
+            <div class="card">
+              <b>🧙 Player (G.png)</b><br />
+              <small>Run, jump, collect — don’t lose all lives</small>
+            </div>
+          </div>
+
+          <div class="buttons">
+            <button id="btnStart">Start (Enter)</button>
+            <button id="btnHow" class="secondary">Controls / Rules</button>
+          </div>
+
+          <div class="footerline">
+            <span>Assets expected in <span class="kbd">assets/</span> (G.png, K.png, N.png, U.png, P.png, F.png, Y.png, E.png)</span>
+            <span id="bestLine">Best: 0</span>
+          </div>
+
+          <div id="err" class="errorbar">
+            Some images failed to load. The game will still run using simple shapes as fallback.
+            Make sure the file names and paths are exactly correct (case-sensitive on GitHub).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * Enchanted Hearts
+     * Single-file HTML5 Canvas game
+     * Place these files in /assets:
+     *   G.png (player)
+     *   K.png (heart collectible)
+     *   N.png (dark orb hazard)
+     *   U.png (bonus)
+     *   P.png (bg level 1)
+     *   F.png (bg level 2)
+     *   Y.png (bg level 3)
+     *   E.png (UI elements)
+     ***********************/
+
+    // ===== Canvas / Context
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+
+    // ===== Overlay UI
+    const overlay = document.getElementById("overlay");
+    const ovTitle = document.getElementById("ovTitle");
+    const ovText  = document.getElementById("ovText");
+    const btnStart = document.getElementById("btnStart");
+    const btnHow = document.getElementById("btnHow");
+    const errBar = document.getElementById("err");
+    const bestLine = document.getElementById("bestLine");
+
+    // ===== Settings
+    const W = canvas.width;
+    const H = canvas.height;
+    const GROUND_Y = H - 72;
+
+    const LEVELS = [
+      { id: 1, bg: "assets/P.png", heartsToWin: 10, timeLimit: 45, orbRate: 0.9, heartRate: 1.35, bonusRate: 0.18 },
+      { id: 2, bg: "assets/F.png", heartsToWin: 12, timeLimit: 45, orbRate: 1.15, heartRate: 1.45, bonusRate: 0.20 },
+      { id: 3, bg: "assets/Y.png", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
+    ];
+
+    // Physics
+    const GRAVITY = 2000; // px/s^2
+    const MOVE_SPEED = 340; // px/s
+    const JUMP_V = 760; // px/s
+
+    // ===== Asset Loading
+    function loadImage(src){
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ ok:true, img, src });
+        img.onerror = () => resolve({ ok:false, img:null, src });
+        img.src = src;
+      });
+    }
+
+    const ASSETS = {
+      player: "assets/G.png",
+      heart:  "assets/K.png",
+      orb:    "assets/N.png",
+      bonus:  "assets/U.png",
+      ui:     "assets/E.png",
+      bg1:    "assets/P.png",
+      bg2:    "assets/F.png",
+      bg3:    "assets/Y.png",
+    };
+
+    let IMG = {
+      player:null, heart:null, orb:null, bonus:null, ui:null,
+      bg:[null,null,null]
+    };
+
+    async function loadAllAssets(){
+      const list = [
+        ["player", ASSETS.player],
+        ["heart",  ASSETS.heart],
+        ["orb",    ASSETS.orb],
+        ["bonus",  ASSETS.bonus],
+        ["ui",     ASSETS.ui],
+        ["bg1",    ASSETS.bg1],
+        ["bg2",    ASSETS.bg2],
+        ["bg3",    ASSETS.bg3],
+      ];
+      const res = await Promise.all(list.map(([k,src]) => loadImage(src)));
+      let failed = 0;
+
+      for (const r of res){
+        const key = list[res.indexOf(r)][0];
+        if (!r.ok) failed++;
+        if (key === "bg1") IMG.bg[0] = r.ok ? r.img : null;
+        else if (key === "bg2") IMG.bg[1] = r.ok ? r.img : null;
+        else if (key === "bg3") IMG.bg[2] = r.ok ? r.img : null;
+        else IMG[key] = r.ok ? r.img : null;
+      }
+
+      if (failed > 0){
+        errBar.classList.add("show");
+      } else {
+        errBar.classList.remove("show");
+      }
+    }
+
+    // ===== Utilities
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rand = (a,b) => a + Math.random()*(b-a);
+
+    function aabb(ax, ay, aw, ah, bx, by, bw, bh){
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    // ===== Input
+    const keys = new Set();
+    addEventListener("keydown", (e)=>{
+      const k = e.key.toLowerCase();
+      keys.add(k);
+      if (k === "enter") {
+        if (state.mode !== "PLAY") startOrRestart();
+      }
+      if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
+    }, { passive:false });
+
+    addEventListener("keyup", (e)=>{
+      keys.delete(e.key.toLowerCase());
+    });
+
+    btnStart.addEventListener("click", () => startOrRestart());
+    btnHow.addEventListener("click", () => {
+      const showing = btnHow.dataset.open === "1";
+      btnHow.dataset.open = showing ? "0" : "1";
+      if (!showing){
+        ovText.innerHTML = `
+          <b>Controls</b>: Move with <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span>.
+          Jump with <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span>.<br><br>
+          <b>Goal</b>: Collect enough hearts before time runs out. Avoid dark orbs. Bonuses give temporary powers.
+        `;
+      } else {
+        ovText.innerHTML = `
+          Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.
+          Three levels, three backgrounds — one Valentine’s night full of spells.
+        `;
+      }
+    });
+
+    // ===== Game State
+    const state = {
+      mode: "MENU", // MENU, PLAY, WIN, LOSE, PAUSE (pause unused)
+      levelIndex: 0,
+      timeLeft: 45,
+      score: 0,
+      best: Number(localStorage.getItem("enchanted_hearts_best") || "0"),
+      heartsCollected: 0,
+      lives: 3,
+      shieldTime: 0,
+      speedTime: 0,
+      screenShake: 0,
+      messageTime: 0,
+      messageText: "",
+    };
+
+    bestLine.textContent = `Best: ${state.best}`;
+
+    // ===== Entities
+    const player = {
+      x: 120,
+      y: GROUND_Y - 70,
+      w: 56,
+      h: 70,
+      vx: 0,
+      vy: 0,
+      onGround: true,
+      facing: 1,
+      stun: 0,
+    };
+
+    let hearts = [];
+    let orbs = [];
+    let bonuses = [];
+
+    // spawn timers (in seconds)
+    let tHeart = 0;
+    let tOrb = 0;
+    let tBonus = 0;
+
+    // ===== Rendering helpers
+    function drawBg(img){
+      if (img){
+        // cover canvas
+        const iw = img.width, ih = img.height;
+        const scale = Math.max(W/iw, H/ih);
+        const dw = iw*scale, dh = ih*scale;
+        const dx = (W - dw)/2;
+        const dy = (H - dh)/2;
+        ctx.drawImage(img, dx, dy, dw, dh);
+      } else {
+        // fallback gradient
+        const g = ctx.createLinearGradient(0,0,W,H);
+        g.addColorStop(0, "#140a22");
+        g.addColorStop(1, "#08121f");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,W,H);
+        // simple stars
+        ctx.globalAlpha = 0.35;
+        for (let i=0;i<70;i++){
+          ctx.fillStyle = "white";
+          ctx.fillRect((i*97)%W, (i*43)%H, 2, 2);
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawGround(){
+      // ground strip
+      ctx.fillStyle = "rgba(0,0,0,.40)";
+      ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
+      // soft top line
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y+0.5);
+      ctx.lineTo(W, GROUND_Y+0.5);
+      ctx.stroke();
+    }
+
+    function drawSpriteOrFallback(img, x, y, w, h, fallbackKind){
+      if (img){
+        ctx.drawImage(img, x, y, w, h);
+      } else {
+        // fallback shapes
+        if (fallbackKind === "player"){
+          ctx.fillStyle = "rgba(255,255,255,.85)";
+          ctx.fillRect(x, y, w, h);
+          ctx.fillStyle = "rgba(255,95,162,.9)";
+          ctx.fillRect(x+10, y+12, w-20, 10);
+        } else if (fallbackKind === "heart"){
+          ctx.fillStyle = "rgba(255,95,162,.9)";
+          ctx.beginPath();
+          const cx = x+w/2, cy=y+h/2;
+          ctx.arc(cx-w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
+          ctx.arc(cx+w*0.15, cy-h*0.10, w*0.18, 0, Math.PI*2);
+          ctx.lineTo(cx, cy+h*0.30);
+          ctx.closePath();
+          ctx.fill();
+        } else if (fallbackKind === "orb"){
+          ctx.fillStyle = "rgba(139,92,246,.9)";
+          ctx.beginPath();
+          ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
+          ctx.fill();
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.arc(x+w/2, y+h/2, Math.min(w,h)/3, 0, Math.PI*2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        } else if (fallbackKind === "bonus"){
+          ctx.fillStyle = "rgba(52,211,153,.9)";
+          ctx.beginPath();
+          ctx.arc(x+w/2, y+h/2, Math.min(w,h)/2, 0, Math.PI*2);
+          ctx.fill();
+        } else if (fallbackKind === "ui"){
+          // not used directly
+        }
+      }
+    }
+
+    function drawHUD(){
+      // HUD panel
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      roundRect(14, 14, 340, 86, 16, true, false);
+      ctx.globalAlpha = 1;
+
+      const lvl = LEVELS[state.levelIndex].id;
+
+      // Text
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "700 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Level: ${lvl}`, 28, 40);
+
+      ctx.font = "600 14px ui-sans-serif, system-ui";
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.fillText(`Score: ${state.score}`, 28, 62);
+      ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 28, 82);
+
+      // Time
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "700 16px ui-sans-serif, system-ui";
+      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 220, 40);
+
+      // Lives (use UI image if provided, otherwise draw hearts)
+      const lx = 220, ly = 52;
+      for (let i=0;i<3;i++){
+        const alive = i < state.lives;
+        const x = lx + i*28, y = ly;
+        if (IMG.ui){
+          // draw a small clipped UI element (best-effort)
+          ctx.globalAlpha = alive ? 1 : 0.25;
+          ctx.drawImage(IMG.ui, x, y, 22, 22);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.globalAlpha = alive ? 1 : 0.25;
+          ctx.fillStyle = "rgba(255,95,162,.95)";
+          ctx.beginPath();
+          ctx.arc(x+7, y+9, 6, 0, Math.PI*2);
+          ctx.arc(x+15, y+9, 6, 0, Math.PI*2);
+          ctx.lineTo(x+11, y+20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Buff indicators
+      let bx = 372, by = 18;
+      if (state.shieldTime > 0){
+        drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime));
+        by += 30;
+      }
+      if (state.speedTime > 0){
+        drawBuffPill(bx, by, "Speed", Math.ceil(state.speedTime));
+      }
+
+      // Floating message
+      if (state.messageTime > 0){
+        ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
+        ctx.fillStyle = "rgba(0,0,0,.35)";
+        roundRect(W/2 - 170, 18, 340, 40, 14, true, false);
+        ctx.fillStyle = "rgba(255,255,255,.92)";
+        ctx.font = "700 14px ui-sans-serif, system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(state.messageText, W/2, 44);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.restore();
+    }
+
+    function drawBuffPill(x,y,label,seconds){
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = "rgba(0,0,0,.35)";
+      roundRect(x, y, 160, 24, 999, true, false);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "700 12px ui-sans-serif, system-ui";
+      ctx.fillText(`${label}: ${seconds}s`, x+10, y+16);
+      ctx.restore();
+    }
+
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
+      ctx.beginPath();
+      ctx.moveTo(x + r.tl, y);
+      ctx.lineTo(x + w - r.tr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+      ctx.lineTo(x + w, y + h - r.br);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+      ctx.lineTo(x + r.bl, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+      ctx.lineTo(x, y + r.tl);
+      ctx.quadraticCurveTo(x, y, x + r.tl, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // ===== Spawning
+    function resetSpawns(){
+      hearts = [];
+      orbs = [];
+      bonuses = [];
+      tHeart = 0;
+      tOrb = 0;
+      tBonus = 0;
+    }
+
+    function spawnHeart(){
+      const size = rand(28, 38);
+      hearts.push({
+        x: rand(80, W-80),
+        y: rand(110, GROUND_Y-160),
+        w: size,
+        h: size,
+        bob: rand(0, Math.PI*2),
+      });
+    }
+
+    function spawnOrb(){
+      const size = rand(34, 48);
+      const fromLeft = Math.random() < 0.5;
+      orbs.push({
+        x: fromLeft ? -size : W + size,
+        y: rand(100, GROUND_Y-90),
+        w: size,
+        h: size,
+        vx: fromLeft ? rand(120, 220) : -rand(120, 220),
+        vy: rand(-30, 30),
+        phase: rand(0, Math.PI*2),
+      });
+    }
+
+    function spawnBonus(){
+      const size = rand(32, 42);
+      // Random type: shield or speed
+      const type = Math.random() < 0.5 ? "SHIELD" : "SPEED";
+      bonuses.push({
+        x: rand(90, W-90),
+        y: rand(120, GROUND_Y-170),
+        w: size,
+        h: size,
+        type,
+        bob: rand(0, Math.PI*2),
+      });
+    }
+
+    // ===== Game flow
+    function showOverlay(title, text){
+      ovTitle.textContent = title;
+      ovText.innerHTML = text;
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+      bestLine.textContent = `Best: ${state.best}`;
+    }
+
+    function hideOverlay(){
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
+    function startOrRestart(){
+      // If coming from menu/lose/win: start at level 1
+      state.levelIndex = 0;
+      state.mode = "PLAY";
+      state.score = 0;
+      state.heartsCollected = 0;
+      state.lives = 3;
+      state.shieldTime = 0;
+      state.speedTime = 0;
+      state.screenShake = 0;
+      state.messageTime = 0;
+      state.messageText = "";
+
+      player.x = 120;
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = true;
+      player.facing = 1;
+      player.stun = 0;
+
+      state.timeLeft = LEVELS[state.levelIndex].timeLimit;
+      resetSpawns();
+
+      // pre-spawn a few hearts
+      for (let i=0;i<4;i++) spawnHeart();
+
+      hideOverlay();
+    }
+
+    function nextLevel(){
+      state.levelIndex++;
+      if (state.levelIndex >= LEVELS.length){
+        state.mode = "WIN";
+        finalizeBest();
+        showOverlay(
+          "You Win! 🔮💖",
+          `You restored the Enchanted Hearts!<br><br>
+           <b>Final score:</b> ${state.score}<br>
+           <b>Best score:</b> ${state.best}<br><br>
+           Press <b>Enter</b> to play again.`
+        );
+        return;
+      }
+
+      // carry score/lives, reset counters for new level
+      state.heartsCollected = 0;
+      state.shieldTime = 0;
+      state.speedTime = 0;
+      state.timeLeft = LEVELS[state.levelIndex].timeLimit;
+      resetSpawns();
+
+      player.x = 120;
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = true;
+      player.stun = 0;
+
+      flashMessage(`Level ${LEVELS[state.levelIndex].id}!`, 1.2);
+    }
+
+    function loseGame(reason){
+      state.mode = "LOSE";
+      finalizeBest();
+      showOverlay(
+        "Game Over 🖤",
+        `${reason}<br><br>
+         <b>Your score:</b> ${state.score}<br>
+         <b>Best score:</b> ${state.best}<br><br>
+         Press <b>Enter</b> to restart.`
+      );
+    }
+
+    function finalizeBest(){
+      if (state.score > state.best){
+        state.best = state.score;
+        localStorage.setItem("enchanted_hearts_best", String(state.best));
+      }
+      bestLine.textContent = `Best: ${state.best}`;
+    }
+
+    function flashMessage(text, seconds){
+      state.messageText = text;
+      state.messageTime = seconds;
+    }
+
+    // ===== Update loop
+    let last = performance.now();
+
+    function update(dt){
+      if (state.mode !== "PLAY") return;
+
+      // Countdown time
+      state.timeLeft -= dt;
+      if (state.timeLeft <= 0){
+        state.timeLeft = 0;
+        loseGame("Time ran out. The spell faded.");
+        return;
+      }
+
+      // Buff timers
+      state.shieldTime = Math.max(0, state.shieldTime - dt);
+      state.speedTime  = Math.max(0, state.speedTime - dt);
+      state.messageTime = Math.max(0, state.messageTime - dt);
+
+      // Screen shake decay
+      state.screenShake = Math.max(0, state.screenShake - dt*2.4);
+
+      // Player stun decay
+      player.stun = Math.max(0, player.stun - dt);
+
+      // Input -> velocity
+      const left  = keys.has("arrowleft") || keys.has("a");
+      const right = keys.has("arrowright") || keys.has("d");
+      const jump  = keys.has(" ") || keys.has("w") || keys.has("arrowup");
+
+      const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
+
+      if (player.stun > 0){
+        player.vx *= 0.92;
+      } else {
+        if (left && !right) player.vx = -MOVE_SPEED * speedMul;
+        else if (right && !left) player.vx = MOVE_SPEED * speedMul;
+        else player.vx *= 0.86;
+      }
+
+      if (left) player.facing = -1;
+      if (right) player.facing = 1;
+
+      // Jump (simple single jump)
+      if (jump && player.onGround && player.stun <= 0){
+        player.vy = -JUMP_V;
+        player.onGround = false;
+      }
+
+      // Gravity & integrate
+      player.vy += GRAVITY * dt;
+      player.x += player.vx * dt;
+      player.y += player.vy * dt;
+
+      // World bounds
+      player.x = clamp(player.x, 0, W - player.w);
+
+      // Ground collision
+      if (player.y + player.h >= GROUND_Y){
+        player.y = GROUND_Y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      } else {
+        player.onGround = false;
+      }
+
+      // Spawning based on level rates
+      const L = LEVELS[state.levelIndex];
+
+      tHeart += dt * L.heartRate;
+      tOrb   += dt * L.orbRate;
+      tBonus += dt * L.bonusRate;
+
+      while (tHeart >= 1){
+        tHeart -= 1;
+        if (hearts.length < 18) spawnHeart();
+      }
+      while (tOrb >= 1){
+        tOrb -= 1;
+        if (orbs.length < 10) spawnOrb();
+      }
+      while (tBonus >= 1){
+        tBonus -= 1;
+        if (bonuses.length < 3) spawnBonus();
+      }
+
+      // Update hearts bob
+      for (const h of hearts){
+        h.bob += dt * 3.2;
+      }
+
+      // Update orbs motion
+      for (const o of orbs){
+        o.phase += dt * 2.3;
+        o.y += Math.sin(o.phase) * 20 * dt + o.vy * dt;
+        o.x += o.vx * dt;
+
+        // bounce vertically a bit
+        if (o.y < 70) { o.y = 70; o.vy = Math.abs(o.vy); }
+        if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
+      }
+
+      // Update bonuses bob
+      for (const b of bonuses){
+        b.bob += dt * 2.8;
+      }
+
+      // Collisions: player with hearts
+      for (let i=hearts.length-1;i>=0;i--){
+        const h = hearts[i];
+        if (aabb(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)){
+          hearts.splice(i,1);
+          state.heartsCollected++;
+          state.score += 10;
+          flashMessage("+10 Heart!", 0.7);
+
+          // win level?
+          if (state.heartsCollected >= L.heartsToWin){
+            // bonus for time left
+            const timeBonus = Math.ceil(state.timeLeft) * 2;
+            state.score += timeBonus;
+            flashMessage(`Level Clear! +${timeBonus} time bonus`, 1.2);
+            nextLevel();
+            return;
+          }
+        }
+      }
+
+      // Collisions: player with bonuses
+      for (let i=bonuses.length-1;i>=0;i--){
+        const b = bonuses[i];
+        if (aabb(player.x, player.y, player.w, player.h, b.x, b.y, b.w, b.h)){
+          bonuses.splice(i,1);
+          if (b.type === "SHIELD"){
+            state.shieldTime = Math.max(state.shieldTime, 8);
+            flashMessage("Shield activated (8s)!", 1.1);
+            state.score += 15;
+          } else {
+            state.speedTime = Math.max(state.speedTime, 7);
+            flashMessage("Speed boost (7s)!", 1.1);
+            state.score += 15;
+          }
+        }
+      }
+
+      // Collisions: player with orbs
+      for (let i=orbs.length-1;i>=0;i--){
+        const o = orbs[i];
+        // remove far off-screen
+        if (o.x < -120 || o.x > W + 120){
+          orbs.splice(i,1);
+          continue;
+        }
+
+        if (aabb(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)){
+          if (state.shieldTime > 0){
+            // shield blocks and removes orb
+            orbs.splice(i,1);
+            state.score += 5;
+            flashMessage("Shield blocked dark magic!", 0.8);
+          } else {
+            // take damage
+            orbs.splice(i,1);
+            state.lives -= 1;
+            player.stun = 0.7;
+            state.screenShake = 0.9;
+            flashMessage("Hit by dark magic! -1 life", 1.0);
+
+            if (state.lives <= 0){
+              state.lives = 0;
+              loseGame("You lost all your lives to dark magic.");
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    // ===== Draw
+    function draw(){
+      // Screen shake
+      let sx = 0, sy = 0;
+      if (state.screenShake > 0){
+        const m = state.screenShake * 6;
+        sx = rand(-m, m);
+        sy = rand(-m, m);
+      }
+
+      ctx.save();
+      ctx.translate(sx, sy);
+
+      // Background by level
+      const bg = IMG.bg[state.levelIndex] || null;
+      drawBg(bg);
+
+      // slight vignette
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha = 1;
+
+      // Ground
+      drawGround();
+
+      // Draw hearts
+      for (const h of hearts){
+        const bobY = Math.sin(h.bob) * 6;
+        drawSpriteOrFallback(IMG.heart, h.x, h.y + bobY, h.w, h.h, "heart");
+        // glow
+        ctx.globalAlpha = 0.18;
+        ctx.beginPath();
+        ctx.arc(h.x+h.w/2, h.y+h.h/2 + bobY, h.w*0.9, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,95,162,1)";
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw bonuses
+      for (const b of bonuses){
+        const bobY = Math.sin(b.bob) * 6;
+        drawSpriteOrFallback(IMG.bonus, b.x, b.y + bobY, b.w, b.h, "bonus");
+
+        // type hint ring
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = b.type === "SHIELD" ? "rgba(52,211,153,1)" : "rgba(255,95,162,1)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(b.x+b.w/2, b.y+b.h/2 + bobY, b.w*0.55, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw orbs
+      for (const o of orbs){
+        drawSpriteOrFallback(IMG.orb, o.x, o.y, o.w, o.h, "orb");
+        // aura
+        ctx.globalAlpha = 0.14;
+        ctx.beginPath();
+        ctx.arc(o.x+o.w/2, o.y+o.h/2, o.w*0.9, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(139,92,246,1)";
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw player
+      // Optional shield aura
+      if (state.shieldTime > 0){
+        ctx.globalAlpha = 0.22;
+        ctx.beginPath();
+        ctx.arc(player.x+player.w/2, player.y+player.h/2, 52, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(52,211,153,1)";
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
+
+      // HUD
+      drawHUD();
+
+      ctx.restore();
+
+      // If not playing, also draw a subtle "Press Enter" hint at bottom
+      if (state.mode !== "PLAY"){
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = "rgba(0,0,0,.35)";
+        roundRect(W/2 - 170, H - 62, 340, 40, 14, true, false);
+        ctx.fillStyle = "rgba(255,255,255,.92)";
+        ctx.font = "700 14px ui-sans-serif, system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("Press Enter to start / restart", W/2, H - 36);
+        ctx.textAlign = "left";
+        ctx.restore();
+      }
+    }
+
+    // ===== Main loop
+    function loop(now){
+      const dt = Math.min(0.033, (now - last) / 1000); // cap dt
+      last = now;
+
+      update(dt);
+      draw();
+
+      requestAnimationFrame(loop);
+    }
+
+    // ===== Boot
+    (async function boot(){
+      await loadAllAssets();
+      // Show best score
+      state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
+      bestLine.textContent = `Best: ${state.best}`;
+
+      // Start animation loop
+      requestAnimationFrame((t)=>{ last = t; loop(t); });
+
+      // Keep menu visible
+      showOverlay(
+        "Welcome to Enchanted Hearts",
+        `Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
+         Press <b>Enter</b> or click <b>Start</b> to begin.`
+      );
+      state.mode = "MENU";
+    })();
+  </script>
+</body>
+</html>
+
