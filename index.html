@@ -46,7 +46,7 @@
     }
     .overlay.show{display:flex;}
     .panel{
-      width:min(860px, 100%);
+      width:min(900px, 100%);
       border-radius: 22px;
       padding:16px 16px 14px;
       background: var(--panel);
@@ -108,9 +108,10 @@
       <div class="panel">
         <h2 id="ovTitle">How to Play</h2>
         <p id="ovText">
-          <b>Level 1:</b> 30s • <b>Level 2:</b> 40s • <b>Level 3:</b> 60s.<br><br>
-          Collect as many hearts as possible. If you hit a dark orb, you lose <b>1 heart</b>.
-          After <b>5 dark orb hits</b>, the game ends.
+          <b>Level 1:</b> 30s (Game over after <b>3</b> orb hits) •
+          <b>Level 2:</b> 40s (after <b>4</b> hits) •
+          <b>Level 3:</b> 60s (after <b>5</b> hits).<br><br>
+          Collect hearts. If you touch a dark orb, you lose <b>1 heart</b> and one heart icon disappears.
           Bonuses last <b>5 seconds</b>.
         </p>
 
@@ -123,20 +124,20 @@
             • <b>Double-jump:</b> jump again in the air
           </div>
           <div class="card">
-            <b>Rules</b><br>
-            • Hearts collected = your score<br>
-            • Dark orb hit: <b>-1 heart</b> (minimum 0)<br>
-            • After <b>5 hits</b> → Game Over<br>
-            • Bonuses last <b>5 seconds</b>
+            <b>Hits per level</b><br>
+            • Level 1: <b>3</b> hits max<br>
+            • Level 2: <b>4</b> hits max<br>
+            • Level 3: <b>5</b> hits max<br>
+            Each hit removes <b>1 heart</b> (min 0)
           </div>
           <div class="card">
-            <b>Bonuses</b><br>
-            • <b>Shield:</b> blocks orb hits for 5s<br>
-            • <b>Speed:</b> faster movement for 5s
+            <b>Bonuses (5s)</b><br>
+            • <b>Shield:</b> blocks orb hits<br>
+            • <b>Speed:</b> faster movement
           </div>
           <div class="card">
             <b>Tip</b><br>
-            • Double-jump helps you reach hearts faster
+            • Double-jump helps you reach hearts fast
           </div>
         </div>
 
@@ -232,11 +233,11 @@
       else errBar.classList.remove("show");
     }
 
-    // Updated level times ✅
+    // Level times + per-level hit limits ✅
     const LEVELS = [
-      { id: 1, bgKey: "bg1", timeLimit: 30, orbRate: 0.95, heartRate: 1.55, bonusRate: 0.22, maxOrbs: 12, maxBonuses: 3 },
-      { id: 2, bgKey: "bg2", timeLimit: 40, orbRate: 1.15, heartRate: 1.65, bonusRate: 0.20, maxOrbs: 14, maxBonuses: 3 },
-      { id: 3, bgKey: "bg3", timeLimit: 60, orbRate: 1.45, heartRate: 1.70, bonusRate: 0.18, maxOrbs: 18, maxBonuses: 3 },
+      { id: 1, bgKey: "bg1", timeLimit: 30, maxHits: 3, orbRate: 0.95, heartRate: 1.55, bonusRate: 0.22, maxOrbs: 12, maxBonuses: 3 },
+      { id: 2, bgKey: "bg2", timeLimit: 40, maxHits: 4, orbRate: 1.15, heartRate: 1.65, bonusRate: 0.20, maxOrbs: 14, maxBonuses: 3 },
+      { id: 3, bgKey: "bg3", timeLimit: 60, maxHits: 5, orbRate: 1.45, heartRate: 1.70, bonusRate: 0.18, maxOrbs: 18, maxBonuses: 3 },
     ];
 
     const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
@@ -245,7 +246,6 @@
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
-    // Best is still "most hearts in a run"
     const BEST_KEY = "enchanted_hearts_best_hearts_run";
     const state = {
       mode: "MENU", // MENU, PLAY, END, LOSE
@@ -256,11 +256,8 @@
       heartsTotal: 0,
       bestTotal: Number(localStorage.getItem(BEST_KEY) || "0"),
 
-      // NEW: dark hits counter, max 5 ✅
-      darkHits: 0,
-      maxDarkHits: 5,
+      hitsThisLevel: 0,   // NEW: hits tracked per level ✅
 
-      // bonuses last 5 seconds
       shieldTime: 0,
       speedTime: 0,
 
@@ -347,6 +344,7 @@
     function startLevel(idx){
       state.levelIndex = idx;
       state.heartsLevel = 0;
+      state.hitsThisLevel = 0; // reset per-level hits ✅
 
       const L = LEVELS[idx];
       state.timeLeft = L.timeLimit;
@@ -369,7 +367,6 @@
       state.mode = "PLAY";
       state.heartsTotal = 0;
       state.heartsLevel = 0;
-      state.darkHits = 0;
 
       state.shieldTime = 0;
       state.speedTime = 0;
@@ -385,13 +382,11 @@
 
     function goToNextLevel(){
       if (state.levelIndex >= LEVELS.length - 1){
-        // finished Level 3 => end run
         state.mode = "END";
         saveBestIfNeeded();
         showOverlay(
           "Run Complete! 💖",
           `<b>Total hearts:</b> ${state.heartsTotal}<br>
-           <b>Dark hits:</b> ${state.darkHits}/${state.maxDarkHits}<br>
            <b>Best:</b> ${state.bestTotal}<br><br>
            Tap <b>Start</b> or press <b>Enter</b> to try again.`
         );
@@ -409,12 +404,12 @@
         "Game Over 🖤",
         `${reason}<br><br>
          <b>Total hearts:</b> ${state.heartsTotal}<br>
-         <b>Dark hits:</b> ${state.darkHits}/${state.maxDarkHits}<br>
          <b>Best:</b> ${state.bestTotal}<br><br>
          Tap <b>Start</b> or press <b>Enter</b> to restart.`
       );
     }
 
+    // Input
     const pointer = { down:false, x:0, y:0 };
     function canvasToGameXY(evt){
       const rect = canvas.getBoundingClientRect();
@@ -464,6 +459,7 @@
     }, { passive:false });
     addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
 
+    // HUD helpers
     function roundRect(x, y, w, h, r, fill, stroke) {
       ctx.beginPath();
       ctx.moveTo(x + r, y);
@@ -547,13 +543,39 @@
       ctx.restore();
     }
 
+    // Draw "hearts" as UI icons that disappear on hits ✅
+    function drawHeartIcons(x, y, current, max){
+      const size = 22;
+      for (let i=0;i<max;i++){
+        const alive = i < current;
+        const px = x + i*(size+6);
+        const py = y;
+
+        if (IMG.ui){
+          ctx.globalAlpha = alive ? 1 : 0.20;
+          ctx.drawImage(IMG.ui, px, py, size, size);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.globalAlpha = alive ? 1 : 0.20;
+          ctx.fillStyle = "rgba(255,95,162,.95)";
+          ctx.beginPath();
+          ctx.arc(px+7, py+9, 6, 0, Math.PI*2);
+          ctx.arc(px+15, py+9, 6, 0, Math.PI*2);
+          ctx.lineTo(px+11, py+20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
     function drawHUD(){
       const L = LEVELS[state.levelIndex];
 
       ctx.save();
       ctx.globalAlpha = 0.92;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(12, 72, 460, 126, 16, true, false);
+      roundRect(12, 72, 520, 138, 16, true, false);
       ctx.globalAlpha = 1;
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
@@ -566,14 +588,22 @@
       ctx.fillText(`Hearts (total): ${state.heartsTotal}`, 24, 144);
       ctx.fillText(`Best: ${state.bestTotal}`, 24, 166);
 
-      // NEW: Dark hits display ✅
-      ctx.fillText(`Dark hits: ${state.darkHits}/${state.maxDarkHits}`, 24, 188);
-
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 290, 98);
+      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 300, 98);
 
-      let bx = 500, by = 78;
+      // Hits limit per level ✅
+      ctx.font = "800 14px ui-sans-serif, system-ui";
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.fillText(`Dark hits: ${state.hitsThisLevel}/${L.maxHits}`, 300, 122);
+
+      // VISUAL: hearts disappear on hit ✅
+      // We show "lives hearts" = remaining hits (maxHits - hitsThisLevel)
+      const livesHearts = Math.max(0, L.maxHits - state.hitsThisLevel);
+      drawHeartIcons(300, 138, livesHearts, L.maxHits);
+
+      // Buffs
+      let bx = 550, by = 78;
       if (state.shieldTime > 0) { drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
       if (state.speedTime  > 0) { drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime)); }
 
@@ -592,17 +622,19 @@
       ctx.restore();
     }
 
-    function applyDarkHit(){
-      state.darkHits += 1;
+    function applyOrbHit(){
+      const L = LEVELS[state.levelIndex];
 
-      // lose 1 heart (min 0) ✅
+      // if not shielded: remove 1 collected heart (score) ✅
       if (state.heartsTotal > 0) state.heartsTotal -= 1;
       if (state.heartsLevel > 0) state.heartsLevel -= 1;
 
-      flashMessage(`Dark hit! -1 heart (${state.darkHits}/5)`, 1.0);
+      state.hitsThisLevel += 1;
 
-      if (state.darkHits >= state.maxDarkHits){
-        gameOver("You were overwhelmed by dark magic (5 hits).");
+      flashMessage(`Dark hit! -1 heart (${state.hitsThisLevel}/${L.maxHits})`, 1.0);
+
+      if (state.hitsThisLevel >= L.maxHits){
+        gameOver(`Too much dark magic in Level ${L.id} (limit ${L.maxHits}).`);
       }
     }
 
@@ -618,7 +650,7 @@
         return;
       }
 
-      // buffs
+      // buff timers (5s)
       state.shieldTime = Math.max(0, state.shieldTime - dt);
       state.speedTime  = Math.max(0, state.speedTime  - dt);
 
@@ -626,7 +658,7 @@
       state.screenShake = Math.max(0, state.screenShake - dt*2.4);
       player.stun = Math.max(0, player.stun - dt);
 
-      // difficulty ramp a bit
+      // difficulty ramp
       state.levelElapsed += dt;
       const step = Math.floor(state.levelElapsed / 18);
       state.difficulty = 1 + step * 0.10;
@@ -685,7 +717,7 @@
         if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
       }
 
-      // hearts collision
+      // hearts
       for (let i=hearts.length-1;i>=0;i--){
         const h = hearts[i];
         if (aabb(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)){
@@ -696,7 +728,7 @@
         }
       }
 
-      // bonuses collision (5s)
+      // bonuses (5s)
       for (let i=bonuses.length-1;i>=0;i--){
         const b = bonuses[i];
         if (aabb(player.x, player.y, player.w, player.h, b.x, b.y, b.w, b.h)){
@@ -711,7 +743,7 @@
         }
       }
 
-      // orbs collision => -1 heart + hit counter (unless shield)
+      // orbs => per-level hits limit + heart removal
       for (let i=orbs.length-1;i>=0;i--){
         const o = orbs[i];
         if (o.x < -220 || o.x > W + 220){ orbs.splice(i,1); continue; }
@@ -724,13 +756,12 @@
           } else {
             state.screenShake = 0.9;
             player.stun = 0.35;
-            applyDarkHit();
-            if (state.mode !== "PLAY") return; // game ended
+            applyOrbHit();
+            if (state.mode !== "PLAY") return;
           }
         }
       }
 
-      // live best
       if (state.heartsTotal > state.bestTotal) state.bestTotal = state.heartsTotal;
     }
 
@@ -787,14 +818,11 @@
     btnRules.addEventListener("click", () => {
       showOverlay(
         "Quick Rules",
-        `• Level 1: <b>30s</b>, Level 2: <b>40s</b>, Level 3: <b>60s</b><br>
-         • Hearts collected = score<br>
-         • Dark orb hit: <b>-1 heart</b><br>
-         • After <b>5 hits</b> → Game Over<br>
-         • Shield/Speed lasts <b>5 seconds</b><br><br>
-         Controls:<br>
-         • Hold/touch to move, or <span class="kbd">←</span>/<span class="kbd">→</span><br>
-         • Click/tap anywhere (or <span class="kbd">Space</span>) to jump`
+        `• Level 1: <b>3</b> hits max, Level 2: <b>4</b>, Level 3: <b>5</b><br>
+         • Each hit: <b>-1 heart</b> (min 0) and one heart icon disappears<br>
+         • Timers: 30s / 40s / 60s<br>
+         • Bonuses last <b>5 seconds</b><br><br>
+         Controls: hold/touch or <span class="kbd">←</span>/<span class="kbd">→</span>, jump click/tap or <span class="kbd">Space</span>`
       );
     });
 
@@ -811,11 +839,9 @@
 
       showOverlay(
         "How to Play",
-        `<b>Level 1:</b> 30s • <b>Level 2:</b> 40s • <b>Level 3:</b> 60s<br><br>
-         Collect hearts to increase your score.<br>
-         If you touch a dark orb, you lose <b>1 heart</b>.<br>
-         After <b>5 dark hits</b>, the game ends.<br>
-         Bonuses last <b>5 seconds</b>.<br><br>
+        `<b>Level 1:</b> 30s (3 hits) • <b>Level 2:</b> 40s (4 hits) • <b>Level 3:</b> 60s (5 hits)<br><br>
+         Collect hearts. If you touch a dark orb, you lose <b>1 heart</b> and one heart icon disappears.<br>
+         Shield/Speed bonuses last <b>5 seconds</b>.<br><br>
          Tap <b>Start</b> to begin.`
       );
 
