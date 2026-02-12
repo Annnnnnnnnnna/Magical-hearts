@@ -6,47 +6,37 @@
   <title>Enchanted Hearts</title>
   <style>
     :root{
-      --bg1:#0b0b16;
-      --bg2:#120a1a;
-      --panel:#121225cc;
-      --text:#f4f4ff;
-      --muted:#c8c8e8;
-      --accent:#ff5fa2;
-      --accent2:#8b5cf6;
-      --good:#34d399;
-      --bad:#fb7185;
-      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --bg1:#0b0b16; --bg2:#120a1a; --panel:#121225cc;
+      --text:#f4f4ff; --muted:#c8c8e8; --shadow: 0 12px 40px rgba(0,0,0,.45);
       --radius:18px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      min-height:100vh;
-      display:grid;
-      place-items:center;
+      margin:0; min-height:100vh; display:grid; place-items:center; padding:16px;
       background: radial-gradient(1200px 700px at 20% 10%, #2b1244 0%, transparent 55%),
                   radial-gradient(1000px 650px at 80% 20%, #1a3a4f 0%, transparent 60%),
                   linear-gradient(160deg,var(--bg1),var(--bg2));
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
-      padding:16px;
     }
     .wrap{ width:min(1100px, 100%); display:grid; gap:14px; }
     header{
-      display:flex; flex-wrap:wrap; gap:10px 14px;
-      align-items:baseline; justify-content:space-between;
+      display:flex; flex-wrap:wrap; gap:10px 14px; align-items:baseline; justify-content:space-between;
       padding:14px 16px; border-radius: var(--radius);
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow); backdrop-filter: blur(10px);
     }
     header h1{ margin:0; font-size: 18px; letter-spacing:.3px; display:flex; align-items:center; gap:8px; }
     header .hint{ margin:0; color:var(--muted); font-size: 13px; line-height:1.35; }
+    .kbd{
+      display:inline-block; padding:2px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.08);
+      color: var(--text); font-size: 12px;
+    }
     .stage{ position:relative; border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); background:#0a0a12; }
     canvas{ width:100%; height:auto; display:block; background:#080814; }
     .overlay{
-      position:absolute; inset:0; display:none;
-      align-items:center; justify-content:center; padding:18px;
+      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:18px;
       background: radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
                   radial-gradient(900px 520px at 50% 70%, rgba(139,92,246,.16), transparent 60%),
                   rgba(0,0,0,.35);
@@ -54,56 +44,27 @@
     }
     .overlay.show{display:flex;}
     .panel{
-      width:min(620px, 100%);
-      border-radius: 22px;
-      padding:18px 18px 16px;
-      background: var(--panel);
-      border: 1px solid rgba(255,255,255,.10);
+      width:min(640px, 100%); border-radius: 22px; padding:18px 18px 16px;
+      background: var(--panel); border: 1px solid rgba(255,255,255,.10);
       box-shadow: 0 24px 70px rgba(0,0,0,.55);
     }
     .panel h2{ margin:0 0 8px; font-size: 22px; letter-spacing:.2px; }
     .panel p{ margin:0 0 12px; color:var(--muted); line-height:1.5; font-size:14px; }
-    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 10px 0 14px; }
-    .card{
-      border-radius: 14px; padding:10px 12px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .card b{color:var(--text)}
-    .card small{color:var(--muted)}
     .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px; }
     button{
-      cursor:pointer; border:0; padding:10px 14px; border-radius: 12px;
-      color:var(--text);
+      cursor:pointer; border:0; padding:10px 14px; border-radius: 12px; color:var(--text);
       background: linear-gradient(180deg, rgba(255,95,162,.95), rgba(255,95,162,.70));
       box-shadow: 0 10px 24px rgba(255,95,162,.25);
       font-weight: 700; letter-spacing:.2px;
     }
     button.secondary{
-      background: rgba(255,255,255,.10);
-      box-shadow:none;
-      border: 1px solid rgba(255,255,255,.12);
-      color:var(--text);
-      font-weight: 600;
+      background: rgba(255,255,255,.10); box-shadow:none;
+      border: 1px solid rgba(255,255,255,.12); color:var(--text); font-weight: 600;
     }
-    button:active{transform: translateY(1px)}
-    .footerline{
-      margin-top: 10px;
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      flex-wrap:wrap;
-      color:var(--muted); font-size:12px;
-    }
-    .kbd{
-      display:inline-block; padding:2px 8px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.08);
-      color: var(--text); font-size: 12px;
-    }
+    .footerline{ margin-top: 10px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; color:var(--muted); font-size:12px; }
     .errorbar{
-      margin-top: 10px; display:none;
-      padding:10px 12px; border-radius: 14px;
-      background: rgba(251,113,133,.14);
-      border: 1px solid rgba(251,113,133,.25);
+      margin-top: 10px; display:none; padding:10px 12px; border-radius: 14px;
+      background: rgba(251,113,133,.14); border: 1px solid rgba(251,113,133,.25);
       color: #ffd7de; font-size: 13px; line-height:1.35;
     }
     .errorbar.show{display:block;}
@@ -127,16 +88,10 @@
         <div class="panel">
           <h2 id="ovTitle">Welcome to Enchanted Hearts</h2>
           <p id="ovText">
-            Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.
-            Three levels, three backgrounds — one Valentine’s night full of spells.
+            Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
+            <b>Important:</b> Put these files in the <b>repo root</b> (same folder as index.html):<br>
+            <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
           </p>
-
-          <div class="grid">
-            <div class="card"><b>❤️ Heart (assets/K.png)</b><br><small>+10 score · Needed to clear the level</small></div>
-            <div class="card"><b>🖤 Dark Orb (assets/N.png)</b><br><small>-1 life · Brief stun</small></div>
-            <div class="card"><b>✨ Bonus (assets/U.png)</b><br><small>Shield or Speed (random)</small></div>
-            <div class="card"><b>🧙 Player (assets/G.png)</b><br><small>Run, jump, collect — don’t lose all lives</small></div>
-          </div>
 
           <div class="buttons">
             <button id="btnStart">Start (Enter)</button>
@@ -144,13 +99,13 @@
           </div>
 
           <div class="footerline">
-            <span>Folder required: <span class="kbd">assets/</span> with G.png K.png N.png U.png P.png F.png Y.png E.png</span>
+            <span>Root files required (no assets folder).</span>
             <span id="bestLine">Best: 0</span>
           </div>
 
           <div id="err" class="errorbar">
             Some images failed to load. The game will still run using simple shapes as fallback.
-            Make sure the file names and paths are exactly correct (case-sensitive on GitHub).
+            Check that file names match exactly (case-sensitive on GitHub Pages).
           </div>
         </div>
       </div>
@@ -159,26 +114,23 @@
 
   <script>
     /***********************
-     * Enchanted Hearts (Single-file)
-     * REQUIRED REPO STRUCTURE:
+     * Enchanted Hearts (Single-file, NO assets folder)
      *
+     * REQUIRED REPO STRUCTURE (root):
      * index.html
-     * assets/
-     *   G.png  (player)
-     *   K.png  (magical hearts)
-     *   N.png  (dark magic)
-     *   U.png  (bonuses)
-     *   P.png  (background level 1)
-     *   F.png  (background level 2)
-     *   Y.png  (background level 3)
-     *   E.png  (UI elements)
+     * G.png  (player)
+     * K.png  (magical hearts)
+     * N.png  (dark magic)
+     * U.png  (bonuses)
+     * P.png  (background level 1)
+     * F.png  (background level 2)
+     * Y.png  (background level 3)
+     * E.png  (UI elements)
      ***********************/
 
-    // ===== Canvas / Context
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
-    // ===== Overlay UI
     const overlay = document.getElementById("overlay");
     const ovTitle = document.getElementById("ovTitle");
     const ovText  = document.getElementById("ovText");
@@ -187,35 +139,32 @@
     const errBar = document.getElementById("err");
     const bestLine = document.getElementById("bestLine");
 
-    // ===== Settings
     const W = canvas.width;
     const H = canvas.height;
     const GROUND_Y = H - 72;
 
-    // IMPORTANT: These paths match EXACTLY the required repo structure:
+    // ROOT paths (no assets/)
     const ASSETS = {
-      player: "assets/G.png",
-      heart:  "assets/K.png",
-      orb:    "assets/N.png",
-      bonus:  "assets/U.png",
-      ui:     "assets/E.png",
-      bg1:    "assets/P.png",
-      bg2:    "assets/F.png",
-      bg3:    "assets/Y.png",
+      player: "G.png",
+      heart:  "K.png",
+      orb:    "N.png",
+      bonus:  "U.png",
+      ui:     "E.png",
+      bg1:    "P.png",
+      bg2:    "F.png",
+      bg3:    "Y.png",
     };
 
     const LEVELS = [
-      { id: 1, bgKey: "bg1", heartsToWin: 10, timeLimit: 45, orbRate: 0.9, heartRate: 1.35, bonusRate: 0.18 },
+      { id: 1, bgKey: "bg1", heartsToWin: 10, timeLimit: 45, orbRate: 0.9,  heartRate: 1.35, bonusRate: 0.18 },
       { id: 2, bgKey: "bg2", heartsToWin: 12, timeLimit: 45, orbRate: 1.15, heartRate: 1.45, bonusRate: 0.20 },
       { id: 3, bgKey: "bg3", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
     ];
 
-    // Physics
     const GRAVITY = 2000;
     const MOVE_SPEED = 340;
     const JUMP_V = 760;
 
-    // ===== Asset Loading
     function loadImage(src){
       return new Promise((resolve) => {
         const img = new Image();
@@ -244,12 +193,10 @@
           IMG[key] = r.img;
         }
       }
-
       if (failed > 0) errBar.classList.add("show");
       else errBar.classList.remove("show");
     }
 
-    // ===== Utilities
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const rand = (a,b) => a + Math.random()*(b-a);
 
@@ -257,7 +204,6 @@
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
-    // ===== Input
     const keys = new Set();
     addEventListener("keydown", (e)=>{
       const k = e.key.toLowerCase();
@@ -268,31 +214,23 @@
       if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
     }, { passive:false });
 
-    addEventListener("keyup", (e)=>{
-      keys.delete(e.key.toLowerCase());
-    });
+    addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
 
     btnStart.addEventListener("click", () => startOrRestart());
     btnHow.addEventListener("click", () => {
       const showing = btnHow.dataset.open === "1";
       btnHow.dataset.open = showing ? "0" : "1";
-      if (!showing){
-        ovText.innerHTML = `
-          <b>Controls</b>: Move with <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span>.
-          Jump with <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span>.<br><br>
-          <b>Goal</b>: Collect enough hearts before time runs out. Avoid dark orbs. Bonuses give temporary powers.
-        `;
-      } else {
-        ovText.innerHTML = `
-          Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.
-          Three levels, three backgrounds — one Valentine’s night full of spells.
-        `;
-      }
+      ovText.innerHTML = !showing
+        ? `<b>Controls</b>: Move with <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span>.
+           Jump with <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span>.<br><br>
+           <b>Goal</b>: Collect enough hearts before time runs out. Avoid dark orbs. Bonuses give temporary powers.`
+        : `Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
+           <b>Important:</b> Put these files in the <b>repo root</b> (same folder as index.html):<br>
+           <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>`;
     });
 
-    // ===== Game State
     const state = {
-      mode: "MENU", // MENU, PLAY, WIN, LOSE
+      mode: "MENU",
       levelIndex: 0,
       timeLeft: 45,
       score: 0,
@@ -307,13 +245,11 @@
     };
     bestLine.textContent = `Best: ${state.best}`;
 
-    // ===== Entities
     const player = {
       x: 120, y: GROUND_Y - 70,
       w: 56, h: 70,
       vx: 0, vy: 0,
       onGround: true,
-      facing: 1,
       stun: 0,
     };
 
@@ -322,7 +258,6 @@
     let bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
 
-    // ===== Drawing helpers
     function roundRect(x, y, w, h, r, fill, stroke) {
       if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
       ctx.beginPath();
@@ -374,11 +309,8 @@
     }
 
     function drawSpriteOrFallback(img, x, y, w, h, kind){
-      if (img){
-        ctx.drawImage(img, x, y, w, h);
-        return;
-      }
-      // fallback shapes
+      if (img){ ctx.drawImage(img, x, y, w, h); return; }
+
       if (kind === "player"){
         ctx.fillStyle = "rgba(255,255,255,.85)";
         ctx.fillRect(x, y, w, h);
@@ -432,6 +364,7 @@
       ctx.globalAlpha = 1;
 
       const lvl = LEVELS[state.levelIndex].id;
+
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "700 16px ui-sans-serif, system-ui";
       ctx.fillText(`Level: ${lvl}`, 28, 40);
@@ -445,7 +378,6 @@
       ctx.font = "700 16px ui-sans-serif, system-ui";
       ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 220, 40);
 
-      // Lives (use UI image if provided)
       const lx = 220, ly = 52;
       for (let i=0;i<3;i++){
         const alive = i < state.lives;
@@ -468,8 +400,8 @@
       }
 
       let bx = 372, by = 18;
-      if (state.shieldTime > 0){ drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
-      if (state.speedTime > 0){ drawBuffPill(bx, by, "Speed", Math.ceil(state.speedTime)); }
+      if (state.shieldTime > 0) { drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
+      if (state.speedTime > 0)  { drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime));  }
 
       if (state.messageTime > 0){
         ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
@@ -486,11 +418,7 @@
       ctx.restore();
     }
 
-    // ===== Spawning
-    function resetSpawns(){
-      hearts = []; orbs = []; bonuses = [];
-      tHeart = 0; tOrb = 0; tBonus = 0;
-    }
+    function resetSpawns(){ hearts=[]; orbs=[]; bonuses=[]; tHeart=0; tOrb=0; tBonus=0; }
 
     function spawnHeart(){
       const size = rand(28, 38);
@@ -514,7 +442,6 @@
       bonuses.push({ x: rand(90, W-90), y: rand(120, GROUND_Y-170), w:size, h:size, type, bob: rand(0, Math.PI*2) });
     }
 
-    // ===== Flow
     function showOverlay(title, html){
       ovTitle.textContent = title;
       ovText.innerHTML = html;
@@ -607,7 +534,6 @@
       );
     }
 
-    // ===== Update / Draw
     let last = performance.now();
 
     function update(dt){
@@ -802,19 +728,6 @@
 
       drawHUD();
       ctx.restore();
-
-      if (state.mode !== "PLAY"){
-        ctx.save();
-        ctx.globalAlpha = 0.85;
-        ctx.fillStyle = "rgba(0,0,0,.35)";
-        roundRect(W/2 - 170, H - 62, 340, 40, 14, true, false);
-        ctx.fillStyle = "rgba(255,255,255,.92)";
-        ctx.font = "700 14px ui-sans-serif, system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText("Press Enter to start / restart", W/2, H - 36);
-        ctx.textAlign = "left";
-        ctx.restore();
-      }
     }
 
     function loop(now){
@@ -825,14 +738,12 @@
       requestAnimationFrame(loop);
     }
 
-    // ===== Boot
     (async function boot(){
       await loadAllAssets();
       state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
       bestLine.textContent = `Best: ${state.best}`;
       requestAnimationFrame((t)=>{ last = t; loop(t); });
-      showOverlay(
-        "Welcome to Enchanted Hearts",
+      showOverlay("Welcome to Enchanted Hearts",
         `Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
          Press <b>Enter</b> or click <b>Start</b> to begin.`
       );
