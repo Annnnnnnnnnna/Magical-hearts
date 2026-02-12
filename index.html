@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Enchanted Hearts</title>
   <style>
     :root{
@@ -12,17 +12,18 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; min-height:100vh; display:grid; place-items:center; padding:16px;
+      margin:0; min-height:100vh; display:grid; place-items:center; padding:12px;
       background: radial-gradient(1200px 700px at 20% 10%, #2b1244 0%, transparent 55%),
                   radial-gradient(1000px 650px at 80% 20%, #1a3a4f 0%, transparent 60%),
                   linear-gradient(160deg,var(--bg1),var(--bg2));
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
+      overscroll-behavior: none;
     }
-    .wrap{ width:min(1100px, 100%); display:grid; gap:14px; }
+    .wrap{ width:min(1100px, 100%); display:grid; gap:12px; }
     header{
       display:flex; flex-wrap:wrap; gap:10px 14px; align-items:baseline; justify-content:space-between;
-      padding:14px 16px; border-radius: var(--radius);
+      padding:12px 14px; border-radius: var(--radius);
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
       box-shadow: var(--shadow); backdrop-filter: blur(10px);
     }
@@ -33,10 +34,24 @@
       border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.08);
       color: var(--text); font-size: 12px;
     }
-    .stage{ position:relative; border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); background:#0a0a12; }
-    canvas{ width:100%; height:auto; display:block; background:#080814; }
+
+    .stage{
+      position:relative;
+      border-radius: var(--radius);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background:#0a0a12;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      display:block;
+      background:#080814;
+      touch-action: none; /* IMPORTANT for phones */
+    }
+
     .overlay{
-      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:18px;
+      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:16px;
       background: radial-gradient(900px 520px at 50% 35%, rgba(255,95,162,.14), transparent 58%),
                   radial-gradient(900px 520px at 50% 70%, rgba(139,92,246,.16), transparent 60%),
                   rgba(0,0,0,.35);
@@ -44,8 +59,11 @@
     }
     .overlay.show{display:flex;}
     .panel{
-      width:min(640px, 100%); border-radius: 22px; padding:18px 18px 16px;
-      background: var(--panel); border: 1px solid rgba(255,255,255,.10);
+      width:min(680px, 100%);
+      border-radius: 22px;
+      padding:16px 16px 14px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.10);
       box-shadow: 0 24px 70px rgba(0,0,0,.55);
     }
     .panel h2{ margin:0 0 8px; font-size: 22px; letter-spacing:.2px; }
@@ -61,7 +79,10 @@
       background: rgba(255,255,255,.10); box-shadow:none;
       border: 1px solid rgba(255,255,255,.12); color:var(--text); font-weight: 600;
     }
-    .footerline{ margin-top: 10px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; color:var(--muted); font-size:12px; }
+    .footerline{
+      margin-top: 10px; display:flex; gap:10px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; color:var(--muted); font-size:12px;
+    }
     .errorbar{
       margin-top: 10px; display:none; padding:10px 12px; border-radius: 14px;
       background: rgba(251,113,133,.14); border: 1px solid rgba(251,113,133,.25);
@@ -75,37 +96,36 @@
     <header>
       <h1>🔮💖 Enchanted Hearts</h1>
       <p class="hint">
-        Move: <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span> ·
-        Jump: <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span> ·
-        Start/Restart: <span class="kbd">Enter</span>
+        <b>Mouse/Touch:</b> Hold to move toward your finger/cursor · Tap upper area to jump · Start/Restart: <span class="kbd">Enter</span>
       </p>
     </header>
 
     <div class="stage">
-      <canvas id="c" width="960" height="540"></canvas>
+      <canvas id="c"></canvas>
 
       <div id="overlay" class="overlay show" aria-hidden="false">
         <div class="panel">
           <h2 id="ovTitle">Welcome to Enchanted Hearts</h2>
           <p id="ovText">
-            Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
-            <b>Important:</b> Put these files in the <b>repo root</b> (same folder as index.html):<br>
-            <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
+            <b>Controls</b> (no keyboard needed):<br>
+            • <b>Hold</b> mouse/touch to move toward your cursor/finger<br>
+            • <b>Tap/Click in the upper half</b> of the game to jump (while on ground)<br><br>
+            Files must be in the <b>repo root</b>: <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>
           </p>
 
           <div class="buttons">
-            <button id="btnStart">Start (Enter)</button>
-            <button id="btnHow" class="secondary">Controls / Rules</button>
+            <button id="btnStart">Start</button>
+            <button id="btnHow" class="secondary">Rules</button>
           </div>
 
           <div class="footerline">
-            <span>Root files required (no assets folder).</span>
+            <span>Tip: On phone, play in landscape for more space.</span>
             <span id="bestLine">Best: 0</span>
           </div>
 
           <div id="err" class="errorbar">
             Some images failed to load. The game will still run using simple shapes as fallback.
-            Check that file names match exactly (case-sensitive on GitHub Pages).
+            Check file names match exactly (case-sensitive on GitHub Pages).
           </div>
         </div>
       </div>
@@ -114,23 +134,58 @@
 
   <script>
     /***********************
-     * Enchanted Hearts (Single-file, NO assets folder)
-     *
-     * REQUIRED REPO STRUCTURE (root):
-     * index.html
-     * G.png  (player)
-     * K.png  (magical hearts)
-     * N.png  (dark magic)
-     * U.png  (bonuses)
-     * P.png  (background level 1)
-     * F.png  (background level 2)
-     * Y.png  (background level 3)
-     * E.png  (UI elements)
+     * Single-file (NO assets folder)
+     * Repo root must contain:
+     * index.html + G.png K.png N.png U.png P.png F.png Y.png E.png
      ***********************/
 
+    // ===== Canvas setup (responsive + crisp on phone)
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
+    // Logical (game) resolution. We scale to screen via DPR.
+    let W = 960, H = 540;           // will be recalculated on resize
+    let dpr = 1;
+
+    function resizeCanvas() {
+      const stage = canvas.parentElement;
+      const maxWidth = stage.clientWidth;
+
+      // Fit height to viewport (keep some room for header)
+      const maxHeight = Math.min(window.innerHeight * 0.78, 720);
+
+      // Keep 16:9
+      let cssW = maxWidth;
+      let cssH = cssW * 9 / 16;
+      if (cssH > maxHeight) {
+        cssH = maxHeight;
+        cssW = cssH * 16 / 9;
+      }
+
+      // Set logical resolution based on css size (stable physics)
+      W = 960;
+      H = Math.round(W * 9 / 16);
+
+      // Actually render at DPR for sharpness
+      dpr = Math.min(window.devicePixelRatio || 1, 2); // cap for performance
+      canvas.style.width = cssW + "px";
+      canvas.style.height = cssH + "px";
+      canvas.width = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Update ground based on H
+      GROUND_Y = H - 72;
+
+      // Keep player on ground after resize
+      if (player) {
+        player.y = Math.min(player.y, GROUND_Y - player.h);
+      }
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    // ===== Overlay UI
     const overlay = document.getElementById("overlay");
     const ovTitle = document.getElementById("ovTitle");
     const ovText  = document.getElementById("ovText");
@@ -139,11 +194,7 @@
     const errBar = document.getElementById("err");
     const bestLine = document.getElementById("bestLine");
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const GROUND_Y = H - 72;
-
-    // ROOT paths (no assets/)
+    // ===== Assets (ROOT paths)
     const ASSETS = {
       player: "G.png",
       heart:  "K.png",
@@ -161,10 +212,20 @@
       { id: 3, bgKey: "bg3", heartsToWin: 14, timeLimit: 45, orbRate: 1.35, heartRate: 1.55, bonusRate: 0.22 },
     ];
 
+    // ===== Physics
     const GRAVITY = 2000;
-    const MOVE_SPEED = 340;
-    const JUMP_V = 760;
+    const MOVE_SPEED = 360;
+    const JUMP_V = 820;
 
+    // ===== Utilities
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rand = (a,b) => a + Math.random()*(b-a);
+
+    function aabb(ax, ay, aw, ah, bx, by, bw, bh){
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    // ===== Asset Loading
     function loadImage(src){
       return new Promise((resolve) => {
         const img = new Image();
@@ -197,13 +258,8 @@
       else errBar.classList.remove("show");
     }
 
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const rand = (a,b) => a + Math.random()*(b-a);
-
-    function aabb(ax, ay, aw, ah, bx, by, bw, bh){
-      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-    }
-
+    // ===== Input
+    // Keep keyboard fallback (optional), but mouse/touch is primary
     const keys = new Set();
     addEventListener("keydown", (e)=>{
       const k = e.key.toLowerCase();
@@ -213,24 +269,57 @@
       }
       if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
     }, { passive:false });
-
     addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
 
-    btnStart.addEventListener("click", () => startOrRestart());
-    btnHow.addEventListener("click", () => {
-      const showing = btnHow.dataset.open === "1";
-      btnHow.dataset.open = showing ? "0" : "1";
-      ovText.innerHTML = !showing
-        ? `<b>Controls</b>: Move with <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span>.
-           Jump with <span class="kbd">Space</span> or <span class="kbd">W</span>/<span class="kbd">↑</span>.<br><br>
-           <b>Goal</b>: Collect enough hearts before time runs out. Avoid dark orbs. Bonuses give temporary powers.`
-        : `Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
-           <b>Important:</b> Put these files in the <b>repo root</b> (same folder as index.html):<br>
-           <span class="kbd">G.png K.png N.png U.png P.png F.png Y.png E.png</span>`;
-    });
+    // Pointer (mouse + touch)
+    const pointer = {
+      down: false,
+      x: W/2,
+      y: H/2,
+      jumpedThisPress: false,
+    };
 
+    function canvasToGameXY(evt){
+      const rect = canvas.getBoundingClientRect();
+      const x = (evt.clientX - rect.left) * (W / rect.width);
+      const y = (evt.clientY - rect.top)  * (H / rect.height);
+      return { x, y };
+    }
+
+    function onPointerDown(evt){
+      if (state.mode !== "PLAY") return; // ignore while overlay/menu
+      pointer.down = true;
+      pointer.jumpedThisPress = false;
+      const p = canvasToGameXY(evt);
+      pointer.x = p.x; pointer.y = p.y;
+
+      // Jump if you tap/click in upper half (and you're on ground)
+      if (!pointer.jumpedThisPress && player.onGround && p.y < H * 0.5 && player.stun <= 0){
+        player.vy = -JUMP_V;
+        player.onGround = false;
+        pointer.jumpedThisPress = true;
+      }
+    }
+
+    function onPointerMove(evt){
+      if (!pointer.down) return;
+      const p = canvasToGameXY(evt);
+      pointer.x = p.x; pointer.y = p.y;
+    }
+
+    function onPointerUp(){
+      pointer.down = false;
+      pointer.jumpedThisPress = false;
+    }
+
+    canvas.addEventListener("pointerdown", (e)=>{ canvas.setPointerCapture(e.pointerId); onPointerDown(e); });
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
+
+    // ===== Game State
     const state = {
-      mode: "MENU",
+      mode: "MENU", // MENU, PLAY, WIN, LOSE
       levelIndex: 0,
       timeLeft: 45,
       score: 0,
@@ -245,10 +334,17 @@
     };
     bestLine.textContent = `Best: ${state.best}`;
 
+    // ===== Entities
+    let GROUND_Y = 468; // will be set by resizeCanvas()
+
+    // BIGGER PLAYER ✅
     const player = {
-      x: 120, y: GROUND_Y - 70,
-      w: 56, h: 70,
-      vx: 0, vy: 0,
+      x: 120,
+      y: 0,
+      w: 84,   // bigger width
+      h: 104,  // bigger height
+      vx: 0,
+      vy: 0,
       onGround: true,
       stun: 0,
     };
@@ -258,6 +354,7 @@
     let bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
 
+    // ===== Drawing helpers
     function roundRect(x, y, w, h, r, fill, stroke) {
       if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
       ctx.beginPath();
@@ -315,7 +412,7 @@
         ctx.fillStyle = "rgba(255,255,255,.85)";
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = "rgba(255,95,162,.9)";
-        ctx.fillRect(x+10, y+12, w-20, 10);
+        ctx.fillRect(x+14, y+14, w-28, 12);
       } else if (kind === "heart"){
         ctx.fillStyle = "rgba(255,95,162,.9)";
         ctx.beginPath();
@@ -418,30 +515,32 @@
       ctx.restore();
     }
 
+    // ===== Spawning
     function resetSpawns(){ hearts=[]; orbs=[]; bonuses=[]; tHeart=0; tOrb=0; tBonus=0; }
 
     function spawnHeart(){
-      const size = rand(28, 38);
-      hearts.push({ x: rand(80, W-80), y: rand(110, GROUND_Y-160), w:size, h:size, bob: rand(0, Math.PI*2) });
+      const size = rand(30, 42);
+      hearts.push({ x: rand(80, W-80), y: rand(110, GROUND_Y-180), w:size, h:size, bob: rand(0, Math.PI*2) });
     }
     function spawnOrb(){
-      const size = rand(34, 48);
+      const size = rand(36, 52);
       const fromLeft = Math.random() < 0.5;
       orbs.push({
         x: fromLeft ? -size : W + size,
-        y: rand(100, GROUND_Y-90),
+        y: rand(100, GROUND_Y-110),
         w:size, h:size,
-        vx: fromLeft ? rand(120, 220) : -rand(120, 220),
+        vx: fromLeft ? rand(120, 230) : -rand(120, 230),
         vy: rand(-30, 30),
         phase: rand(0, Math.PI*2),
       });
     }
     function spawnBonus(){
-      const size = rand(32, 42);
+      const size = rand(34, 46);
       const type = Math.random() < 0.5 ? "SHIELD" : "SPEED";
-      bonuses.push({ x: rand(90, W-90), y: rand(120, GROUND_Y-170), w:size, h:size, type, bob: rand(0, Math.PI*2) });
+      bonuses.push({ x: rand(90, W-90), y: rand(120, GROUND_Y-190), w:size, h:size, type, bob: rand(0, Math.PI*2) });
     }
 
+    // ===== Flow
     function showOverlay(title, html){
       ovTitle.textContent = title;
       ovText.innerHTML = html;
@@ -534,6 +633,7 @@
       );
     }
 
+    // ===== Update / Draw
     let last = performance.now();
 
     function update(dt){
@@ -552,25 +652,39 @@
       state.screenShake = Math.max(0, state.screenShake - dt*2.4);
       player.stun = Math.max(0, player.stun - dt);
 
-      const left  = keys.has("arrowleft") || keys.has("a");
-      const right = keys.has("arrowright") || keys.has("d");
-      const jump  = keys.has(" ") || keys.has("w") || keys.has("arrowup");
+      // Keyboard fallback (optional)
+      const leftK  = keys.has("arrowleft") || keys.has("a");
+      const rightK = keys.has("arrowright") || keys.has("d");
+      const jumpK  = keys.has(" ") || keys.has("w") || keys.has("arrowup");
 
       const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
+
+      // ===== Mouse/Touch movement (PRIMARY)
+      // Hold to move toward pointer.x
+      let moveDir = 0;
+      if (pointer.down) {
+        const dx = pointer.x - (player.x + player.w/2);
+        if (Math.abs(dx) > 10) moveDir = dx > 0 ? 1 : -1;
+      } else {
+        // keyboard fallback
+        if (leftK && !rightK) moveDir = -1;
+        if (rightK && !leftK) moveDir = 1;
+      }
 
       if (player.stun > 0){
         player.vx *= 0.92;
       } else {
-        if (left && !right) player.vx = -MOVE_SPEED * speedMul;
-        else if (right && !left) player.vx = MOVE_SPEED * speedMul;
+        if (moveDir !== 0) player.vx = moveDir * MOVE_SPEED * speedMul;
         else player.vx *= 0.86;
       }
 
-      if (jump && player.onGround && player.stun <= 0){
+      // Jump fallback by keyboard (mouse/touch jump handled on pointerdown upper half)
+      if (jumpK && player.onGround && player.stun <= 0){
         player.vy = -JUMP_V;
         player.onGround = false;
       }
 
+      // Physics integrate
       player.vy += GRAVITY * dt;
       player.x += player.vx * dt;
       player.y += player.vy * dt;
@@ -583,6 +697,7 @@
         player.onGround = true;
       } else player.onGround = false;
 
+      // Spawn based on level
       const L = LEVELS[state.levelIndex];
       tHeart += dt * L.heartRate;
       tOrb   += dt * L.orbRate;
@@ -602,6 +717,7 @@
       }
       for (const b of bonuses){ b.bob += dt * 2.8; }
 
+      // Collisions: hearts
       for (let i=hearts.length-1;i>=0;i--){
         const h = hearts[i];
         if (aabb(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)){
@@ -620,6 +736,7 @@
         }
       }
 
+      // Collisions: bonuses
       for (let i=bonuses.length-1;i>=0;i--){
         const b = bonuses[i];
         if (aabb(player.x, player.y, player.w, player.h, b.x, b.y, b.w, b.h)){
@@ -636,9 +753,10 @@
         }
       }
 
+      // Collisions: orbs
       for (let i=orbs.length-1;i>=0;i--){
         const o = orbs[i];
-        if (o.x < -120 || o.x > W + 120){ orbs.splice(i,1); continue; }
+        if (o.x < -140 || o.x > W + 140){ orbs.splice(i,1); continue; }
 
         if (aabb(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)){
           if (state.shieldTime > 0){
@@ -663,6 +781,7 @@
     }
 
     function draw(){
+      // screen shake
       let sx = 0, sy = 0;
       if (state.screenShake > 0){
         const m = state.screenShake * 6;
@@ -673,9 +792,11 @@
       ctx.save();
       ctx.translate(sx, sy);
 
+      // background
       const bg = IMG[LEVELS[state.levelIndex].bgKey] || null;
       drawBg(bg);
 
+      // vignette
       ctx.globalAlpha = 0.22;
       ctx.fillStyle = "black";
       ctx.fillRect(0,0,W,H);
@@ -683,6 +804,7 @@
 
       drawGround();
 
+      // hearts
       for (const h of hearts){
         const bobY = Math.sin(h.bob) * 6;
         drawSpriteOrFallback(IMG.heart, h.x, h.y + bobY, h.w, h.h, "heart");
@@ -694,6 +816,7 @@
         ctx.globalAlpha = 1;
       }
 
+      // bonuses
       for (const b of bonuses){
         const bobY = Math.sin(b.bob) * 6;
         drawSpriteOrFallback(IMG.bonus, b.x, b.y + bobY, b.w, b.h, "bonus");
@@ -706,6 +829,7 @@
         ctx.globalAlpha = 1;
       }
 
+      // orbs
       for (const o of orbs){
         drawSpriteOrFallback(IMG.orb, o.x, o.y, o.w, o.h, "orb");
         ctx.globalAlpha = 0.14;
@@ -716,14 +840,17 @@
         ctx.globalAlpha = 1;
       }
 
+      // shield aura
       if (state.shieldTime > 0){
         ctx.globalAlpha = 0.22;
         ctx.beginPath();
-        ctx.arc(player.x+player.w/2, player.y+player.h/2, 52, 0, Math.PI*2);
+        ctx.arc(player.x+player.w/2, player.y+player.h/2, 64, 0, Math.PI*2);
         ctx.fillStyle = "rgba(52,211,153,1)";
         ctx.fill();
         ctx.globalAlpha = 1;
       }
+
+      // player (bigger)
       drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
 
       drawHUD();
@@ -738,17 +865,54 @@
       requestAnimationFrame(loop);
     }
 
+    // ===== UI
+    btnStart.addEventListener("click", () => startOrRestart());
+    btnHow.addEventListener("click", () => {
+      ovText.innerHTML =
+        `Rules:<br>
+         • Collect <b>hearts</b> to clear each level<br>
+         • Avoid <b>dark orbs</b> (lose lives)<br>
+         • Bonuses give <b>Shield</b> or <b>Speed</b><br><br>
+         Controls:<br>
+         • <b>Hold</b> mouse/touch to move toward your finger/cursor<br>
+         • <b>Tap/click upper half</b> to jump (when on ground)`;
+    });
+
+    function showOverlay(title, html){
+      ovTitle.textContent = title;
+      ovText.innerHTML = html;
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+      bestLine.textContent = `Best: ${state.best}`;
+    }
+    function hideOverlay(){
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
+    // ===== Boot
     (async function boot(){
+      resizeCanvas();
+      // initial player placement after resize
+      player.y = GROUND_Y - player.h;
+
       await loadAllAssets();
+
       state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
       bestLine.textContent = `Best: ${state.best}`;
+
       requestAnimationFrame((t)=>{ last = t; loop(t); });
-      showOverlay("Welcome to Enchanted Hearts",
-        `Collect <b>magical hearts</b>, avoid <b>dark magic</b>, and grab <b>bonuses</b> to survive.<br><br>
-         Press <b>Enter</b> or click <b>Start</b> to begin.`
+
+      showOverlay(
+        "Welcome to Enchanted Hearts",
+        `Mouse/Touch controls (no keyboard needed):<br>
+         • <b>Hold</b> to move toward your finger/cursor<br>
+         • <b>Tap/click upper half</b> to jump<br><br>
+         Press <b>Start</b> to begin.`
       );
       state.mode = "MENU";
     })();
+
   </script>
 </body>
 </html>
