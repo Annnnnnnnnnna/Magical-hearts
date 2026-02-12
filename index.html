@@ -32,7 +32,7 @@
       touch-action:none;
     }
 
-    /* small top hint bar */
+    /* Top hint bar */
     .topbar{
       position:absolute; left:12px; right:12px; top:10px;
       display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -68,7 +68,7 @@
     }
     .overlay.show{display:flex;}
     .panel{
-      width:min(820px, 100%);
+      width:min(860px, 100%);
       border-radius: 22px;
       padding:16px 16px 14px;
       background: var(--panel);
@@ -152,9 +152,8 @@
       <div class="panel">
         <h2 id="ovTitle">How to Play</h2>
         <p id="ovText">
-          Welcome! This game is <b>fullscreen</b>, <b>mobile-friendly</b>, and has an <b>Endless Mode</b> for beating records.<br><br>
-          <b>Goal (Levels 1–3):</b> collect enough hearts before time runs out.<br>
-          After Level 3, the game continues forever in <b>Endless Mode</b> and gets harder over time.
+          You have <b>3 timed levels</b>. In each level, collect <b>as many hearts as possible</b> before the timer hits 0.<br><br>
+          <b>Record:</b> the <b>total hearts</b> you collect across all <b>three levels</b>.
         </p>
 
         <div class="grid">
@@ -163,26 +162,24 @@
             • <b>Mouse/Touch:</b> hold to move toward your finger/cursor<br>
             • <b>Keyboard:</b> <span class="kbd">←</span>/<span class="kbd">→</span> to move<br>
             • <b>Jump:</b> click/tap anywhere or press <span class="kbd">Space</span><br>
-            • <b>Double-jump:</b> jump again in the air to reach higher hearts
+            • <b>Double-jump:</b> jump again in the air
           </div>
           <div class="card">
-            <b>Endless Mode (Record)</b><br>
-            • Starts automatically after Level 3<br>
-            • Difficulty increases every <b>20 seconds</b><br>
-            • Your best score is saved as <b>Best</b><br>
-            • In Endless, hearts give a small <b>time bonus</b>
-          </div>
-          <div class="card">
-            <b>Scoring</b><br>
-            • Heart: <b>+10</b><br>
-            • Bonus pickup: <b>+15</b><br>
-            • Shield blocks an orb: <b>+5</b><br>
-            • Level clear: time bonus
+            <b>Goal</b><br>
+            • Each level has a fixed timer<br>
+            • Collect hearts fast (no “required amount”)<br>
+            • Avoid dark orbs (lose lives)<br>
+            • After Level 3, your run ends and your total hearts are compared to your record
           </div>
           <div class="card">
             <b>Power-ups</b><br>
-            • <b>Shield:</b> blocks dark orb hits while active<br>
+            • <b>Shield:</b> blocks orb hits while active<br>
             • <b>Speed:</b> faster movement for a short time
+          </div>
+          <div class="card">
+            <b>Tip</b><br>
+            • Rotate your phone to landscape for more space<br>
+            • Use double-jump to grab high hearts quickly
           </div>
         </div>
 
@@ -192,8 +189,8 @@
         </div>
 
         <div class="footerline">
-          <span id="bestLine">Best: 0</span>
-          <span>Tip: rotate phone to landscape.</span>
+          <span id="bestLine">Best (3 levels): 0 hearts</span>
+          <span>Good luck 💖</span>
         </div>
 
         <div id="err" class="errorbar">
@@ -206,18 +203,10 @@
 
   <script>
     /***********************
-     * Enchanted Hearts (Single file, fullscreen)
-     * Repo root files:
-     * index.html, G.png, K.png, N.png, U.png, P.png, F.png, Y.png, E.png
-     *
-     * Controls:
-     * - Move: hold/touch OR arrow keys
-     * - Jump: click/tap anywhere OR Space (double jump enabled)
-     * - Restart: Enter
-     *
-     * Game:
-     * - Levels 1–3 are longer
-     * - After Level 3: Endless Mode (difficulty increases over time)
+     * 3 Timed Levels + Record (Total Hearts across 3 levels)
+     * - No "hearts required" per level
+     * - You just collect as many hearts as possible in the time
+     * - Record = total hearts after Level 3
      ***********************/
 
     const canvas = document.getElementById("c");
@@ -242,85 +231,17 @@
     let JUMP_V = 900;
 
     function recomputeJumpPhysics(){
-      // movement speed scales with width
       MOVE_SPEED = Math.max(340, Math.floor(W * 0.40));
 
-      // jump height target: about 45% of usable height
       const usable = (GROUND_Y - 60);
       const targetJumpHeight = Math.max(240, usable * 0.45);
 
-      // gravity scales with height for consistent feel
       GRAVITY = Math.max(1900, Math.floor(usable * 4.2));
-
-      // v = sqrt(2gh)
       JUMP_V = Math.sqrt(2 * GRAVITY * targetJumpHeight);
 
-      // clamp to avoid extremes
       JUMP_V = Math.min(Math.max(JUMP_V, 780), 1400);
       GRAVITY = Math.min(Math.max(GRAVITY, 1600), 3600);
     }
-
-    // Game state
-    const state = {
-      mode: "MENU", // MENU, PLAY, LOSE
-      levelIndex: 0,
-      timeLeft: 60,
-      score: 0,
-      best: Number(localStorage.getItem("enchanted_hearts_best") || "0"),
-      heartsCollected: 0,
-      lives: 3,
-      shieldTime: 0,
-      speedTime: 0,
-      screenShake: 0,
-      messageTime: 0,
-      messageText: "",
-
-      // Endless / record
-      endless: false,
-      endlessTime: 0,
-      difficulty: 1,
-      stageCount: 0, // counts endless "stages" for background cycling
-    };
-    bestLine.textContent = `Best: ${state.best}`;
-
-    // Player
-    const player = {
-      x: 120,
-      y: 0,
-      w: 84,
-      h: 104,
-      vx: 0,
-      vy: 0,
-      onGround: true,
-      stun: 0,
-      jumpsLeft: 2,
-      maxJumps: 2,
-    };
-
-    function resizeCanvas(){
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = Math.floor(window.innerWidth);
-      H = Math.floor(window.innerHeight);
-
-      canvas.width  = Math.floor(W * dpr);
-      canvas.height = Math.floor(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // ground thickness scales with height
-      const groundThickness = Math.max(78, Math.floor(H * 0.14));
-      GROUND_Y = H - groundThickness;
-
-      // player scales with height
-      player.h = Math.max(92, Math.floor(H * 0.18));
-      player.w = Math.max(70, Math.floor(player.h * 0.80));
-
-      player.y = Math.min(player.y, GROUND_Y - player.h);
-      if (player.y < 0) player.y = GROUND_Y - player.h;
-      player.x = Math.min(player.x, W - player.w);
-
-      recomputeJumpPhysics();
-    }
-    window.addEventListener("resize", resizeCanvas);
 
     // Assets (repo root)
     const ASSETS = {
@@ -334,11 +255,11 @@
       bg3:    "Y.png",
     };
 
-    // Longer levels ✅
+    // 3 timed levels (a bit longer)
     const LEVELS = [
-      { id: 1, bgKey: "bg1", heartsToWin: 14, timeLimit: 70, orbRate: 0.85, heartRate: 1.35, bonusRate: 0.18 },
-      { id: 2, bgKey: "bg2", heartsToWin: 16, timeLimit: 75, orbRate: 1.05, heartRate: 1.45, bonusRate: 0.20 },
-      { id: 3, bgKey: "bg3", heartsToWin: 18, timeLimit: 80, orbRate: 1.20, heartRate: 1.55, bonusRate: 0.22 },
+      { id: 1, bgKey: "bg1", timeLimit: 70, orbRate: 0.85, heartRate: 1.45, bonusRate: 0.20 },
+      { id: 2, bgKey: "bg2", timeLimit: 75, orbRate: 1.05, heartRate: 1.55, bonusRate: 0.20 },
+      { id: 3, bgKey: "bg3", timeLimit: 80, orbRate: 1.20, heartRate: 1.65, bonusRate: 0.22 },
     ];
 
     // Utils
@@ -373,6 +294,69 @@
       else errBar.classList.remove("show");
     }
 
+    // Game state
+    const BEST_KEY = "enchanted_hearts_best_total_hearts";
+    const state = {
+      mode: "MENU", // MENU, PLAY, END, LOSE
+      levelIndex: 0,
+
+      timeLeft: LEVELS[0].timeLimit,
+
+      // Hearts counters (THIS is the score now)
+      heartsLevel: 0,
+      heartsTotal: 0,
+      bestTotal: Number(localStorage.getItem(BEST_KEY) || "0"),
+
+      lives: 3,
+      shieldTime: 0,
+      speedTime: 0,
+      screenShake: 0,
+      messageTime: 0,
+      messageText: "",
+
+      // soft scaling inside a level (optional)
+      levelElapsed: 0,
+      difficulty: 1,  // grows within the level
+    };
+    bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
+
+    // Player
+    const player = {
+      x: 120,
+      y: 0,
+      w: 84,
+      h: 104,
+      vx: 0,
+      vy: 0,
+      onGround: true,
+      stun: 0,
+      jumpsLeft: 2,
+      maxJumps: 2,
+    };
+
+    function resizeCanvas(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = Math.floor(window.innerWidth);
+      H = Math.floor(window.innerHeight);
+
+      canvas.width  = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const groundThickness = Math.max(78, Math.floor(H * 0.14));
+      GROUND_Y = H - groundThickness;
+
+      player.h = Math.max(92, Math.floor(H * 0.18));
+      player.w = Math.max(70, Math.floor(player.h * 0.80));
+
+      player.y = Math.min(player.y, GROUND_Y - player.h);
+      if (player.y < 0) player.y = GROUND_Y - player.h;
+      player.x = Math.min(player.x, W - player.w);
+
+      recomputeJumpPhysics();
+    }
+    window.addEventListener("resize", resizeCanvas);
+
     // Entities
     let hearts = [], orbs = [], bonuses = [];
     let tHeart = 0, tOrb = 0, tBonus = 0;
@@ -394,8 +378,8 @@
       const size = rand(Math.max(36, H*0.06), Math.max(56, H*0.085));
       const fromLeft = Math.random() < 0.5;
 
-      // Faster in Endless via difficulty
-      const speedMul = state.endless ? state.difficulty : 1;
+      const L = LEVELS[state.levelIndex];
+      const speedMul = state.difficulty; // ramps within the level
       const base = rand(120, 240) * speedMul;
 
       orbs.push({
@@ -425,7 +409,7 @@
       ovText.innerHTML = html;
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
-      bestLine.textContent = `Best: ${state.best}`;
+      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
     }
     function hideOverlay(){
       overlay.classList.remove("show");
@@ -435,12 +419,13 @@
       state.messageText = text;
       state.messageTime = seconds;
     }
-    function finalizeBest(){
-      if (state.score > state.best){
-        state.best = state.score;
-        localStorage.setItem("enchanted_hearts_best", String(state.best));
+
+    function saveBestIfNeeded(){
+      if (state.heartsTotal > state.bestTotal){
+        state.bestTotal = state.heartsTotal;
+        localStorage.setItem(BEST_KEY, String(state.bestTotal));
       }
-      bestLine.textContent = `Best: ${state.best}`;
+      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
     }
 
     function tryJump(){
@@ -456,8 +441,9 @@
       state.mode = "PLAY";
       state.levelIndex = 0;
 
-      state.score = 0;
-      state.heartsCollected = 0;
+      state.heartsLevel = 0;
+      state.heartsTotal = 0;
+
       state.lives = 3;
       state.shieldTime = 0;
       state.speedTime = 0;
@@ -465,10 +451,8 @@
       state.messageTime = 0;
       state.messageText = "";
 
-      state.endless = false;
-      state.endlessTime = 0;
+      state.levelElapsed = 0;
       state.difficulty = 1;
-      state.stageCount = 0;
 
       player.x = Math.max(40, W * 0.10);
       player.y = GROUND_Y - player.h;
@@ -481,43 +465,39 @@
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
 
       resetSpawns();
-      for (let i=0;i<5;i++) spawnHeart();
+      for (let i=0;i<7;i++) spawnHeart(); // start with more hearts
 
       hideOverlay();
+      flashMessage("Level 1!", 1.1);
     }
 
-    function nextLevel(){
+    function advanceLevel(){
       state.levelIndex++;
 
-      // After Level 3 -> Endless Mode ✅
       if (state.levelIndex >= LEVELS.length){
-        state.endless = true;
-        state.endlessTime = 0;
-        state.difficulty = 1;
-        state.stageCount = 0;
+        // End of run (3 levels done)
+        state.mode = "END";
+        saveBestIfNeeded();
 
-        // keep playing, reset "stage timer" and heart counter
-        state.timeLeft = 90;
-        state.heartsCollected = 0;
-
-        // cycle backgrounds forever
-        state.levelIndex = 0;
-
-        resetSpawns();
-        for (let i=0;i<6;i++) spawnHeart();
-
-        flashMessage("Endless Mode! Beat your record!", 1.8);
+        showOverlay(
+          "Run Complete! 💖",
+          `You finished all <b>3 levels</b>.<br><br>
+           <b>Total hearts:</b> ${state.heartsTotal}<br>
+           <b>Record (best):</b> ${state.bestTotal}<br><br>
+           Tap <b>Start</b> or press <b>Enter</b> to try to beat your record.`
+        );
         return;
       }
 
-      // normal level transition
-      state.heartsCollected = 0;
-      state.shieldTime = 0;
-      state.speedTime = 0;
+      // Next level
+      state.heartsLevel = 0;
       state.timeLeft = LEVELS[state.levelIndex].timeLimit;
 
+      state.levelElapsed = 0;
+      state.difficulty = 1;
+
       resetSpawns();
-      for (let i=0;i<5;i++) spawnHeart();
+      for (let i=0;i<7;i++) spawnHeart();
 
       player.x = Math.max(40, W * 0.10);
       player.y = GROUND_Y - player.h;
@@ -532,19 +512,18 @@
 
     function loseGame(reason){
       state.mode = "LOSE";
-      finalizeBest();
+      saveBestIfNeeded();
       showOverlay(
         "Game Over 🖤",
         `${reason}<br><br>
-         <b>Your score:</b> ${state.score}<br>
-         <b>Best score:</b> ${state.best}<br><br>
+         <b>Total hearts (so far):</b> ${state.heartsTotal}<br>
+         <b>Record (best):</b> ${state.bestTotal}<br><br>
          Tap <b>Start</b> or press <b>Enter</b> to restart.`
       );
     }
 
     // ===== Input: pointer (move) + arrows + click/tap to jump
     const pointer = { down:false, x:0, y:0 };
-
     function canvasToGameXY(evt){
       const rect = canvas.getBoundingClientRect();
       return {
@@ -553,7 +532,7 @@
       };
     }
 
-    // Click/tap anywhere to jump ✅
+    // Click/tap anywhere to jump
     canvas.addEventListener("pointerdown", (e)=>{
       if (state.mode !== "PLAY") return;
       canvas.setPointerCapture(e.pointerId);
@@ -562,18 +541,16 @@
       pointer.x = p.x; pointer.y = p.y;
       tryJump();
     });
-
     canvas.addEventListener("pointermove", (e)=>{
       if (!pointer.down) return;
       const p = canvasToGameXY(e);
       pointer.x = p.x; pointer.y = p.y;
     });
-
     function pointerUp(){ pointer.down = false; }
     canvas.addEventListener("pointerup", pointerUp);
     canvas.addEventListener("pointercancel", pointerUp);
 
-    // Keyboard (move + jump + restart)
+    // Keyboard
     const keys = new Set();
     addEventListener("keydown", (e)=>{
       const k = e.key.toLowerCase();
@@ -587,7 +564,6 @@
       }
       if (k === "arrowleft" || k === "arrowright") e.preventDefault();
     }, { passive:false });
-
     addEventListener("keyup", (e)=> keys.delete(e.key.toLowerCase()));
 
     // ===== Drawing helpers
@@ -648,7 +624,6 @@
     function drawSpriteOrFallback(img, x, y, w, h, kind){
       if (img){ ctx.drawImage(img, x, y, w, h); return; }
 
-      // fallback shapes
       if (kind === "player"){
         ctx.fillStyle = "rgba(255,255,255,.85)";
         ctx.fillRect(x, y, w, h);
@@ -698,33 +673,27 @@
       ctx.save();
       ctx.globalAlpha = 0.92;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(12, 72, 360, 112, 16, true, false);
+      roundRect(12, 72, 400, 122, 16, true, false);
       ctx.globalAlpha = 1;
 
       const lvl = LEVELS[state.levelIndex].id;
-      const modeLabel = state.endless ? "Endless" : `Level ${lvl}`;
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`${modeLabel}`, 24, 98);
+      ctx.fillText(`Level: ${lvl}/3`, 24, 98);
 
       ctx.font = "700 14px ui-sans-serif, system-ui";
       ctx.fillStyle = "rgba(255,255,255,.85)";
-      ctx.fillText(`Score: ${state.score}`, 24, 120);
-      ctx.fillText(`Best: ${state.best}`, 24, 142);
-
-      if (!state.endless){
-        ctx.fillText(`Hearts: ${state.heartsCollected}/${LEVELS[state.levelIndex].heartsToWin}`, 24, 164);
-      } else {
-        ctx.fillText(`Difficulty: x${state.difficulty.toFixed(2)}`, 24, 164);
-      }
+      ctx.fillText(`Hearts (level): ${state.heartsLevel}`, 24, 122);
+      ctx.fillText(`Hearts (total): ${state.heartsTotal}`, 24, 144);
+      ctx.fillText(`Best (3 levels): ${state.bestTotal}`, 24, 166);
 
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "800 16px ui-sans-serif, system-ui";
-      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 240, 98);
+      ctx.fillText(`Time: ${Math.ceil(state.timeLeft)}s`, 260, 98);
 
-      // Lives icons
-      const lx = 240, ly = 112;
+      // lives
+      const lx = 260, ly = 112;
       for (let i=0;i<3;i++){
         const alive = i < state.lives;
         const x = lx + i*28, y = ly;
@@ -745,12 +714,12 @@
         }
       }
 
-      // Buff pills
-      let bx = 390, by = 78;
+      // buffs
+      let bx = 430, by = 78;
       if (state.shieldTime > 0){ drawBuffPill(bx, by, "Shield", Math.ceil(state.shieldTime)); by += 30; }
       if (state.speedTime > 0){  drawBuffPill(bx, by, "Speed",  Math.ceil(state.speedTime));  }
 
-      // Message
+      // message
       if (state.messageTime > 0){
         ctx.globalAlpha = clamp(state.messageTime / 1.0, 0, 1);
         ctx.fillStyle = "rgba(0,0,0,.35)";
@@ -772,26 +741,21 @@
     function update(dt){
       if (state.mode !== "PLAY") return;
 
-      // Endless difficulty ramp ✅
-      if (state.endless) {
-        state.endlessTime += dt;
-        const step = Math.floor(state.endlessTime / 20);
-        state.difficulty = 1 + step * 0.12;
-        state.difficulty = Math.min(state.difficulty, 2.6);
-
-        // background cycling every 30s in endless
-        const stageStep = Math.floor(state.endlessTime / 30);
-        const idx = stageStep % LEVELS.length;
-        state.levelIndex = idx;
-      }
-
       // timer
       state.timeLeft -= dt;
       if (state.timeLeft <= 0){
         state.timeLeft = 0;
-        loseGame("Time ran out. The spell faded.");
+        // time over => next level (not game over)
+        flashMessage("Time! Next level…", 1.0);
+        advanceLevel();
         return;
       }
+
+      // ramp difficulty slightly within each level (more orbs later)
+      state.levelElapsed += dt;
+      const step = Math.floor(state.levelElapsed / 20); // every 20 seconds
+      state.difficulty = 1 + step * 0.12;
+      state.difficulty = Math.min(state.difficulty, 2.2);
 
       state.shieldTime = Math.max(0, state.shieldTime - dt);
       state.speedTime  = Math.max(0, state.speedTime - dt);
@@ -801,8 +765,7 @@
 
       const speedMul = state.speedTime > 0 ? 1.35 : 1.0;
 
-      // Combined controls:
-      // pointer hold moves toward pointer, arrows can override
+      // Combined controls: pointer hold + arrows override
       let moveDir = 0;
 
       if (pointer.down){
@@ -839,15 +802,15 @@
         player.onGround = false;
       }
 
-      // Spawn rates (difficulty affects orbs mainly)
+      // Spawn
       const L = LEVELS[state.levelIndex];
-      const d = state.endless ? state.difficulty : 1;
+      const d = state.difficulty;
 
-      tHeart += dt * (L.heartRate * 1.05);
-      tOrb   += dt * (L.orbRate * d);
-      tBonus += dt * (L.bonusRate * (state.endless ? 0.90 : 1));
+      tHeart += dt * (L.heartRate * 1.05);     // keep hearts flowing
+      tOrb   += dt * (L.orbRate   * d);        // orbs increase over time
+      tBonus += dt * (L.bonusRate * 1.0);
 
-      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 22) spawnHeart(); }
+      while (tHeart >= 1){ tHeart -= 1; if (hearts.length < 26) spawnHeart(); }
       while (tOrb   >= 1){ tOrb   -= 1; if (orbs.length < 14) spawnOrb(); }
       while (tBonus >= 1){ tBonus -= 1; if (bonuses.length < 3) spawnBonus(); }
 
@@ -862,28 +825,14 @@
         if (o.y > GROUND_Y - o.h - 10) { o.y = GROUND_Y - o.h - 10; o.vy = -Math.abs(o.vy); }
       }
 
-      // collisions: hearts
+      // collisions: hearts (ONLY COUNT HEARTS, no +10)
       for (let i=hearts.length-1;i>=0;i--){
         const h = hearts[i];
         if (aabb(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)){
           hearts.splice(i,1);
-          state.heartsCollected++;
-          state.score += 10;
-          flashMessage("+10 Heart!", 0.6);
-
-          // Endless: small time bonus (skill = longer run)
-          if (state.endless){
-            state.timeLeft = Math.min(state.timeLeft + 0.4, 120);
-          }
-
-          // Level clearing only in non-endless
-          if (!state.endless && state.heartsCollected >= L.heartsToWin){
-            const timeBonus = Math.ceil(state.timeLeft) * 2;
-            state.score += timeBonus;
-            flashMessage(`Level Clear! +${timeBonus} time bonus`, 1.2);
-            nextLevel();
-            return;
-          }
+          state.heartsLevel += 1;
+          state.heartsTotal += 1;
+          flashMessage(`+1 Heart!`, 0.45);
         }
       }
 
@@ -895,11 +844,9 @@
           if (b.type === "SHIELD"){
             state.shieldTime = Math.max(state.shieldTime, 8);
             flashMessage("Shield activated (8s)!", 1.0);
-            state.score += 15;
           } else {
             state.speedTime = Math.max(state.speedTime, 7);
             flashMessage("Speed boost (7s)!", 1.0);
-            state.score += 15;
           }
         }
       }
@@ -912,7 +859,6 @@
         if (aabb(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)){
           if (state.shieldTime > 0){
             orbs.splice(i,1);
-            state.score += 5;
             flashMessage("Shield blocked dark magic!", 0.8);
           } else {
             orbs.splice(i,1);
@@ -996,11 +942,6 @@
       // player
       drawSpriteOrFallback(IMG.player, player.x, player.y, player.w, player.h, "player");
 
-      // update best live (so you see it instantly)
-      if (state.mode === "PLAY" && state.score > state.best){
-        state.best = state.score;
-      }
-
       drawHUD();
       ctx.restore();
     }
@@ -1018,14 +959,15 @@
     btnRules.addEventListener("click", () => {
       showOverlay(
         "Quick Rules",
-        `• Collect hearts before the timer hits 0<br>
+        `• You have <b>3 timed levels</b><br>
+         • Collect as many hearts as possible before the timer hits 0<br>
+         • Record = <b>total hearts across all 3 levels</b><br>
          • Avoid dark orbs (lose lives)<br>
          • Bonuses give Shield or Speed<br><br>
          Controls:<br>
-         • Hold/touch to move, or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
+         • Hold/touch to move, or <span class="kbd">←</span>/<span class="kbd">→</span><br>
          • Click/tap anywhere (or <span class="kbd">Space</span>) to jump<br>
-         • Double-jump is enabled<br><br>
-         After Level 3: <b>Endless Mode</b> (difficulty increases every 20s).`
+         • Double-jump is enabled`
       );
     });
 
@@ -1036,30 +978,31 @@
 
       await loadAllAssets();
 
-      state.best = Number(localStorage.getItem("enchanted_hearts_best") || "0");
-      bestLine.textContent = `Best: ${state.best}`;
+      state.bestTotal = Number(localStorage.getItem(BEST_KEY) || "0");
+      bestLine.textContent = `Best (3 levels): ${state.bestTotal} hearts`;
 
       requestAnimationFrame((t)=>{ last = t; loop(t); });
 
       showOverlay(
         "How to Play",
-        `This game is <b>fullscreen</b> and <b>mobile-friendly</b> ✅<br><br>
-         <b>Levels 1–3:</b> collect enough hearts before time runs out.<br>
-         <b>Endless Mode:</b> after Level 3, the game continues forever and gets harder over time (perfect for records).<br><br>
-         <b>Move:</b> hold/touch to move toward your finger, or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
+        `You have <b>3 timed levels</b>.<br>
+         In each level, collect <b>as many hearts as possible</b> before time runs out.<br><br>
+         <b>Record:</b> total hearts collected across all 3 levels.<br><br>
+         <b>Move:</b> hold/touch or use <span class="kbd">←</span>/<span class="kbd">→</span><br>
          <b>Jump:</b> click/tap anywhere or press <span class="kbd">Space</span><br>
-         <b>Double-jump:</b> jump again in the air to reach higher hearts<br><br>
+         <b>Double-jump:</b> jump again in the air<br><br>
          Tap <b>Start</b> to begin.`
       );
 
       state.mode = "MENU";
     })();
 
-    // Save best score when leaving page (extra safety)
+    // Save best on leave (extra safety)
     addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden"){
-        if (state.score > Number(localStorage.getItem("enchanted_hearts_best") || "0")){
-          localStorage.setItem("enchanted_hearts_best", String(state.score));
+        const currentBest = Number(localStorage.getItem(BEST_KEY) || "0");
+        if (state.heartsTotal > currentBest){
+          localStorage.setItem(BEST_KEY, String(state.heartsTotal));
         }
       }
     });
